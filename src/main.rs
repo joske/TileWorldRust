@@ -1,9 +1,9 @@
 mod grid;
 
-use grid::build_grid;
+use grid::Grid;
 
 fn main() {
-    let mut grid = build_grid();
+    let mut grid = Grid::new();
     grid.init();
     grid.print();
 }

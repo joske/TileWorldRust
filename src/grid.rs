@@ -41,16 +41,17 @@ struct GridObject {
     id: u8,
 }
 
-pub fn build_grid() -> Grid {
-    return Grid {
-        agents: Vec::with_capacity(5),
-        tiles: Vec::with_capacity(5),
-        holes: Vec::with_capacity(5),
-        obstacles: Vec::with_capacity(5),
-        objects: [[None; COLS]; ROWS],
-    };
-}
 impl Grid {
+    pub fn new() -> Self {
+        Grid {
+            agents: Vec::with_capacity(5),
+            tiles: Vec::with_capacity(5),
+            holes: Vec::with_capacity(5),
+            obstacles: Vec::with_capacity(5),
+            objects: [[None; COLS]; ROWS],
+        }
+    }
+
     pub fn init(&mut self) {
         let mut rng = rand::thread_rng();
         for i in 1..5 {
@@ -140,6 +141,6 @@ impl Grid {
                 }
             }
             print!("\n");
-        }
+        }        
     }
 }
