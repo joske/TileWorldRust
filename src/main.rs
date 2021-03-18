@@ -1,13 +1,9 @@
 mod grid;
 
-use grid::Grid;
+use grid::build_grid;
 
 fn main() {
-    let grid = Grid {
-        agents: Vec::with_capacity(5),
-        tiles: Vec::with_capacity(5),
-        holes: Vec::with_capacity(5),
-        obstacles: Vec::with_capacity(5),
-        objects : [[None; 5]; 5],
-    };
+    let mut grid = build_grid();
+    grid.init();
+    grid.print();
 }
