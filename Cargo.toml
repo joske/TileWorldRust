@@ -9,3 +9,14 @@ edition = "2018"
 [dependencies]
 getrandom = "0.2.2"
 rand = "0.8.3"
+glib = "^0"
+pangocairo = "^0"
+cairo-rs = { version = "^0", features = ["png"] }
+
+[dependencies.gtk]
+version = "0.9.0"
+features = ["v3_16"]
+
+[dependencies.gio]
+version = ""
+features = ["v2_44"]

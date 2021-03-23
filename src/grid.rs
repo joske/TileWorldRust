@@ -3,9 +3,7 @@ use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
-
-const COLS: u32 = 10;
-const ROWS: u32 = 10;
+use super::{COLS, ROWS};
 
 pub struct Grid {
     agents: Vec<GridObject>,
@@ -82,7 +80,7 @@ impl Location {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum Type {
+pub enum Type {
     Agent,
     Tile,
     Hole,
@@ -90,11 +88,11 @@ enum Type {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct GridObject {
-    location: Location,
-    object_type: Type,
-    id: u8,
-    score: u32,
+pub struct GridObject {
+    pub location: Location,
+    pub object_type: Type,
+    pub id: u8,
+    pub score: u32,
 }
 
 impl Grid {
@@ -150,6 +148,10 @@ impl Grid {
             self.obstacles.push(o);
             self.set_object(&o);
         }
+    }
+
+    pub fn object(&self, l:&Location) -> &Option<GridObject> {
+        &self.objects[l.col as usize][l.row as usize]
     }
 
     pub fn set_object<'grid>(&mut self, o: &'grid GridObject) {
