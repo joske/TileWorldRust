@@ -1,4 +1,7 @@
 extern crate rand;
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::ops::{Deref, DerefMut};
 use rand::{
     distributions::{Distribution, Standard},
     Rng,
@@ -97,13 +100,15 @@ pub struct GridObject {
 
 impl Grid {
     pub fn new() -> Self {
-        Grid {
+        let mut grid = Grid {
             agents: Vec::new(),
             tiles: Vec::new(),
             holes: Vec::new(),
             obstacles: Vec::new(),
             objects: [[None; COLS as usize]; ROWS as usize],
-        }
+        };
+        grid.init();
+        return grid;
     }
 
     pub fn init(&mut self) {
@@ -158,6 +163,12 @@ impl Grid {
         self.objects[o.location.col as usize][o.location.row as usize] = Some(*o);
     }
 
+    pub fn move_object<'grid>(&mut self, o: &mut GridObject, new_loc : Location) {
+        self.objects[o.location.col as usize][o.location.row as usize] = None;
+        o.location = new_loc;
+        self.objects[new_loc.col as usize][new_loc.row as usize] = Some(*o);
+    }
+
     pub fn is_free(&self, location: Location) -> bool {
         let o = self.objects[location.col as usize][location.row as usize];
         match o {
@@ -178,15 +189,6 @@ impl Grid {
             l = Location { col: c, row: r };
         }
         return l;
-    }
-
-    pub fn update(&mut self) {
-        for mut a in self.agents.iter_mut() {          
-            let d : Direction = rand::random();
-            let l = a.location;
-            // super::astar::astar(self, &l, &Location{col:1, row:1});
-            print!("Move Agent {:?} to {:?}\n", a, l.next_location(d));
-        }
     }
 
     pub fn print(&self) {
@@ -212,4 +214,20 @@ impl Grid {
             print!("Agent {} : {}\n", a.id, score.to_string());
         }
     }
+}
+
+pub fn update(reference : Rc<RefCell<Grid>>) {
+    let grid = &*reference.borrow_mut();
+    for a in grid.agents.iter() {          
+        update_agent(reference.clone(), a);
+    }
+}
+
+fn update_agent(reference: Rc<RefCell<Grid>>, a : &GridObject) {
+    let d : Direction = rand::random();
+    let l = a.location;
+    let grid = &*reference.borrow_mut();
+    // grid.move_object(a, l);
+    // let path = super::astar::astar(reference.clone(), l, Location{col:1, row:1});
+    print!("Move Agent {:?} to {:?}\n", a, l.next_location(d));
 }

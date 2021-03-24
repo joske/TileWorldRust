@@ -7,6 +7,7 @@ mod astar;
 mod grid;
 mod view;
 
+use std::cell::RefCell;
 use gtk::*;
 use std::rc::Rc;
 
@@ -15,14 +16,9 @@ pub const ROWS: u32 = 10;
 const MAG: u32 = 20;
 
 fn main() {
-    let mut grid = grid::Grid::new();
-    grid.init();
-    grid.print();
-    grid.update();
-    grid.print();
+    let workspace = Rc::new(RefCell::new(grid::Grid::new()));
 
-    let workspace = Rc::new(grid);
     let application = Application::new(Some("be.sourcery.tileworld"), Default::default())
         .expect("failed to initialize GTK application");
-    view::start_grid(workspace, application);
+    view::start_grid(workspace.clone(), application);
 }

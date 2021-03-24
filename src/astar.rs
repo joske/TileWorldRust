@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use super::grid::Direction;
 use super::grid::Grid;
 use super::grid::Location;
@@ -29,44 +31,47 @@ impl PartialEq for Node {
     }
 }
 
-pub fn astar(grid: Grid, from: Location, to: Location) -> Option<Vec<Direction>> {
-    let mut open_list = BinaryHeap::new();
-    let mut closed_list: HashSet<Node> = HashSet::new();
+pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Option<Vec<Direction>> {
+    let grid = reference.borrow();
+    let mut open_list : BinaryHeap<Rc<RefCell<Reverse<Node>>>> = BinaryHeap::new();
+    let mut closed_list: HashSet<Rc<Location>> = HashSet::new();
     let from_node = Node {
         location: from,
         fscore: 0,
         path : Vec::new(),
     };
-    open_list.push(Reverse(from_node));
+    open_list.push(Rc::new(RefCell::new(Reverse(from_node))));
     while let Some(current_node) = open_list.pop() {
-        if current_node.0.location == to {
-            return Some(current_node.0.path);
+        let ref cur_node = *current_node.borrow();
+        let cur_location = cur_node.0.location;
+        if cur_location == to {
+            return Some(cur_node.0.path.clone());
         }
-        closed_list.insert(current_node.0);
+        closed_list.insert(Rc::new(cur_location));
         for d in [Direction::Up, Direction::Down, Direction::Left, Direction::Right,].iter()
         {
-            // if current_node.0.location.is_valid(d.clone()) {
-            //     let next_location = current_node.0.location.next_location(d.clone());
-            //     if next_location == to || grid.is_free(next_location) {
-            //         let h = next_location.distance(to);
-            //         let g = next_location.distance(from);
-                    // let mut new_path = current_node.0.path.clone();
-                    // new_path.insert(0, d.clone());
-                    // let child = Node {
-                    //     location: next_location,
-                    //     path : new_path,
-                    //     fscore: g + h,
-                    // };
-                    // if !closed_list.contains(&child) {
-                    //     for i in open_list.iter() {
-                    //         if i == &Reverse(child) {
-                    //             continue;
-                    //         }
-                    //     }
-                    //     open_list.push(Reverse(child));
-                    // }
-                // }
-            // }
+            if cur_location.is_valid(d.clone()) {
+                let next_location = cur_location.next_location(d.clone());
+                if next_location == to || grid.is_free(next_location) {
+                    let h = next_location.distance(to);
+                    let g = next_location.distance(from);
+                    let mut new_path = cur_node.0.path.clone();
+                    new_path.insert(0, d.clone());
+                    let child = Node {
+                        location: next_location,
+                        path : new_path,
+                        fscore: g + h,
+                    };
+                    if !closed_list.contains(&next_location) {
+                        for i in open_list.iter() {
+                            if (*i.borrow()).0.location == child.location {
+                                continue;
+                            }
+                        }
+                        open_list.push(Rc::new(RefCell::new(Reverse(child))));
+                    }
+                }
+            }
         }
     }
     return None;
@@ -81,7 +86,24 @@ mod tests {
         let grid = Grid::new();
         let from = Location { col: 0, row: 0 };
         let to = Location { col: 1, row: 1 };
-        let path = astar(grid, from, to);
-        assert_eq!(path.unwrap().len(), 2);
+        let path = astar(Rc::new(RefCell::new(grid)), from, to);
+        let p = path.unwrap();
+        assert_eq!(p.len(), 2);
+        assert_eq!(p[0], Direction::Right);
+        assert_eq!(p[1], Direction::Down);
+    }
+
+    #[test]
+    fn test_path2() {
+        let grid = Grid::new();
+        let from = Location { col: 0, row: 0 };
+        let to = Location { col: 2, row: 2 };
+        let path = astar(Rc::new(RefCell::new(grid)), from, to);
+        let p = path.unwrap();
+        assert_eq!(p.len(), 4);
+        assert_eq!(p[0], Direction::Right);
+        assert_eq!(p[1], Direction::Right);
+        assert_eq!(p[2], Direction::Down);
+        assert_eq!(p[3], Direction::Down);
     }
 }
