@@ -155,7 +155,7 @@ impl Grid {
     }
 
     pub fn set_object<'grid>(&mut self, o: &'grid GridObject) {
-        // self.objects[o.location.col][o.location.row] = Some(o);
+        self.objects[o.location.col as usize][o.location.row as usize] = Some(*o);
     }
 
     pub fn is_free(&self, location: Location) -> bool {
