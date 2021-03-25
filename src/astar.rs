@@ -106,4 +106,18 @@ mod tests {
         assert_eq!(p[2], Direction::Down);
         assert_eq!(p[3], Direction::Down);
     }
+
+    #[test]
+    fn test_big_grid() {
+        let mut grid = Grid::new();
+        grid.init(1, 5, 5, 5);
+        let from = Location { col: 0, row: 0 };
+        let to = Location { col: 10, row: 10 };
+        let path = astar(Rc::new(RefCell::new(grid)), from, to);
+        assert!(path.is_some());
+        let p = path.unwrap();
+        assert_eq!(p.len(), 20);
+        assert_eq!(p[0], Direction::Right);
+        assert_eq!(p[1], Direction::Right);
+    }
 }

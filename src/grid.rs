@@ -1,10 +1,10 @@
 extern crate rand;
-use std::cell::RefCell;
-use std::rc::Rc;
 use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
+use std::thread;
+use std::time::Duration;
 use super::{COLS, ROWS};
 
 pub struct Grid {
@@ -91,13 +91,13 @@ pub enum Type {
 
 #[derive(Debug, Clone, Copy)]
 pub struct GridObject {
-    pub location: Location,
-    pub object_type: Type,
     pub id: u8,
+    pub object_type: Type,
+    pub location: Location,
     pub score: u32,
 }
 
-impl Grid {
+impl Grid{
     pub fn new() -> Self {
         let mut grid = Grid {
             agents: Vec::new(),
@@ -106,13 +106,13 @@ impl Grid {
             obstacles: Vec::new(),
             objects: [[None; COLS as usize]; ROWS as usize],
         };
-        grid.init();
+        grid.init(3, 5, 5, 5);
         return grid;
     }
 
-    pub fn init(&mut self) {
+    pub fn init(&mut self, num_agents: u8, num_tiles: u8, num_holes: u8, num_obstacles: u8) {
         let mut rng = rand::thread_rng();
-        for i in 1..=3 {
+        for i in 1..=num_agents {
             let a = GridObject {
                 location: self.random_location(),
                 object_type: Type::Agent,
@@ -122,7 +122,7 @@ impl Grid {
             self.agents.push(a);
             self.set_object(&a);
         }
-        for i in 1..5 {
+        for i in 1..=num_tiles {
             let t = GridObject {
                 location: self.random_location(),
                 object_type: Type::Tile,
@@ -132,7 +132,7 @@ impl Grid {
             self.tiles.push(t);
             self.set_object(&t);
         }
-        for i in 1..5 {
+        for i in 1..=num_holes {
             let h = GridObject {
                 location: self.random_location(),
                 object_type: Type::Hole,
@@ -142,7 +142,7 @@ impl Grid {
             self.holes.push(h);
             self.set_object(&h);
         }
-        for i in 1..5 {
+        for i in 1..=num_obstacles {
             let o = GridObject {
                 location: self.random_location(),
                 object_type: Type::Obstacle,
@@ -160,12 +160,6 @@ impl Grid {
 
     pub fn set_object<'grid>(&mut self, o: &'grid GridObject) {
         self.objects[o.location.col as usize][o.location.row as usize] = Some(*o);
-    }
-
-    pub fn move_object<'grid>(&mut self, o: &mut GridObject, new_loc : Location) {
-        self.objects[o.location.col as usize][o.location.row as usize] = None;
-        o.location = new_loc;
-        self.objects[new_loc.col as usize][new_loc.row as usize] = Some(*o);
     }
 
     pub fn is_free(&self, location: Location) -> bool {
@@ -213,20 +207,19 @@ impl Grid {
             print!("Agent {} : {}\n", a.id, score.to_string());
         }
     }
-}
 
-pub fn update(reference : Rc<RefCell<Grid>>) {
-    let grid = &*reference.borrow_mut();
-    for mut a in grid.agents.into_iter() {          
-        update_agent(reference.clone(), &mut a);
+    pub fn update(&mut self) {
+        for mut a in self.agents.iter_mut() {          
+            let d : Direction = rand::random();
+            let l = a.location;
+            let new_loc = l.next_location(d);
+            self.objects[a.location.col as usize][a.location.row as usize] = None;
+            a.location = new_loc;
+            self.objects[new_loc.col as usize][new_loc.row as usize] = Some(*a);
+            //let path = super::astar::astar(reference.clone(), l, Location{col:1, row:1});
+            print!("Move Agent {:?} to {:?}\n", a, l.next_location(d));
+        }    
+        self.print();
     }
-}
 
-fn update_agent(reference: Rc<RefCell<Grid>>, a : &mut GridObject) {
-    let d : Direction = rand::random();
-    let l = a.location;
-    let grid = &*reference.borrow_mut();
-    grid.move_object(a, l);
-    // let path = super::astar::astar(reference.clone(), l, Location{col:1, row:1});
-    print!("Move Agent {:?} to {:?}\n", a, l.next_location(d));
 }

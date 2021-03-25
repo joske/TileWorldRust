@@ -16,7 +16,8 @@ pub const ROWS: u32 = 10;
 const MAG: u32 = 20;
 
 fn main() {
-    let workspace = Rc::new(RefCell::new(grid::Grid::new()));
+    let grid = grid::Grid::new();
+    let workspace = Rc::new(RefCell::new(grid));
 
     let application = Application::new(Some("be.sourcery.tileworld"), Default::default())
         .expect("failed to initialize GTK application");

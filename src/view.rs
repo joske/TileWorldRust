@@ -6,14 +6,13 @@ use gio::prelude::*;
 use super::grid::Location;
 use gtk::*;
 use std::rc::Rc;
-use super::grid::update;
 
 use super::{COLS, ROWS, MAG};
 
 pub fn start_grid(workspace: Rc<RefCell<Grid>>, application : gtk::Application) {
 application.connect_activate(move |app| {
     let window = ApplicationWindow::new(app);
-    window.set_title("First GTK+ Program");
+    window.set_title("TileWorld");
     window.set_default_size((COLS * MAG) as i32 + 100, (ROWS * MAG) as i32);
     let frame = &Frame::new(None);
     window.add(frame);
@@ -59,8 +58,8 @@ application.connect_activate(move |app| {
         Inhibit(false)
     }));
     glib::timeout_add_local(200, clone!(@weak workspace => @default-return Continue(true), move || {
-        update(workspace.clone());
         area.queue_draw_area(0, 0, (COLS * MAG) as i32, (ROWS * MAG) as i32);
+        workspace.borrow_mut().update();
         glib::Continue(true)
     }));
     window.show_all();
