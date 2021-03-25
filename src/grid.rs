@@ -142,7 +142,7 @@ pub struct GridObject {
 }
 
 impl Grid {
-    pub fn new() -> Self {
+    pub fn new(num_agents: u8, num_tiles: u8, num_holes: u8, num_obstacles: u8) -> Self {
         let mut grid = Grid {
             agents: Vec::new(),
             tiles: Vec::new(),
@@ -150,7 +150,7 @@ impl Grid {
             obstacles: Vec::new(),
             objects: [[None; COLS as usize]; ROWS as usize],
         };
-        grid.init(3, 5, 5, 5);
+        grid.init(num_agents, num_tiles, num_holes, num_obstacles);
         return grid;
     }
 

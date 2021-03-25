@@ -11,12 +11,12 @@ use std::cell::RefCell;
 use gtk::*;
 use std::rc::Rc;
 
-pub const COLS: u32 = 10;
-pub const ROWS: u32 = 10;
+pub const COLS: u32 = 40;
+pub const ROWS: u32 = 40;
 const MAG: u32 = 20;
 
 fn main() {
-    let grid = grid::Grid::new();
+    let grid = grid::Grid::new(5, 20, 20, 20);
     let workspace = Rc::new(RefCell::new(grid));
 
     let application = Application::new(Some("be.sourcery.tileworld"), Default::default())
