@@ -218,16 +218,16 @@ impl Grid {
 
 pub fn update(reference : Rc<RefCell<Grid>>) {
     let grid = &*reference.borrow_mut();
-    for a in grid.agents.iter() {          
-        update_agent(reference.clone(), a);
+    for mut a in grid.agents.into_iter() {          
+        update_agent(reference.clone(), &mut a);
     }
 }
 
-fn update_agent(reference: Rc<RefCell<Grid>>, a : &GridObject) {
+fn update_agent(reference: Rc<RefCell<Grid>>, a : &mut GridObject) {
     let d : Direction = rand::random();
     let l = a.location;
     let grid = &*reference.borrow_mut();
-    // grid.move_object(a, l);
+    grid.move_object(a, l);
     // let path = super::astar::astar(reference.clone(), l, Location{col:1, row:1});
     print!("Move Agent {:?} to {:?}\n", a, l.next_location(d));
 }
