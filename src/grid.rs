@@ -1,7 +1,6 @@
 extern crate rand;
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::ops::{Deref, DerefMut};
 use rand::{
     distributions::{Distribution, Standard},
     Rng,

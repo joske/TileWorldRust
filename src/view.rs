@@ -52,7 +52,6 @@ application.connect_activate(move |app| {
                             cr.rectangle(x, y, MAG as f64, MAG as f64);
                             cr.fill();
                         }
-                        _ => (),
                     },
                 }
             }
