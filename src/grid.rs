@@ -1,11 +1,11 @@
 extern crate rand;
+use super::{COLS, ROWS};
 use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
 use std::thread;
 use std::time::Duration;
-use super::{COLS, ROWS};
 
 pub struct Grid {
     agents: Vec<GridObject>,
@@ -41,16 +41,52 @@ pub struct Location {
 }
 
 impl Location {
-    pub fn next_location(&self, d : Direction) -> Location {
+    pub fn next_location(&self, d: Direction) -> Location {
         match d {
-            Direction::Up => Location {col : self.col, row : self.row - 1},
-            Direction::Down => Location {col : self.col, row : self.row + 1},
-            Direction::Left => Location {col : self.col - 1, row : self.row},
-            Direction::Right => Location {col : self.col + 1, row : self.row},
+            Direction::Up => {
+                if self.row > 0 {
+                    Location {
+                        col: self.col,
+                        row: self.row - 1,
+                    }
+                } else {
+                    *self
+                }
+            }
+            Direction::Down => {
+                if self.row < COLS - 1 {
+                    Location {
+                        col: self.col,
+                        row: self.row + 1,
+                    }
+                } else {
+                    *self
+                }
+            }
+            Direction::Left => {
+                if self.col > 0 {
+                    Location {
+                        col: self.col - 1,
+                        row: self.row,
+                    }
+                } else {
+                    *self
+                }
+            }
+            Direction::Right => {
+                if self.col < ROWS - 1 {
+                    Location {
+                        col: self.col + 1,
+                        row: self.row,
+                    }
+                } else {
+                    *self
+                }
+            }
         }
     }
 
-    pub fn direction(&self, other:&Self) -> Direction {
+    pub fn direction(&self, other: &Self) -> Direction {
         if self.col == other.col {
             if self.row == other.row - 1 {
                 return Direction::Up;
@@ -65,7 +101,7 @@ impl Location {
             }
         }
     }
-    pub fn is_valid(&self, d : Direction) -> bool {
+    pub fn is_valid(&self, d: Direction) -> bool {
         match d {
             Direction::Up => self.row > 0,
             Direction::Down => self.row < ROWS - 1,
@@ -74,9 +110,17 @@ impl Location {
         }
     }
 
-    pub fn distance(&self, other : Location) -> u32 {
-        let col_diff = if self.col > other.col { self.col - other.col } else { other.col - self.col};
-        let row_diff = if self.row > other.row { self.row - other.row } else { other.row - self.row};        
+    pub fn distance(&self, other: Location) -> u32 {
+        let col_diff = if self.col > other.col {
+            self.col - other.col
+        } else {
+            other.col - self.col
+        };
+        let row_diff = if self.row > other.row {
+            self.row - other.row
+        } else {
+            other.row - self.row
+        };
         col_diff + row_diff
     }
 }
@@ -97,7 +141,7 @@ pub struct GridObject {
     pub score: u32,
 }
 
-impl Grid{
+impl Grid {
     pub fn new() -> Self {
         let mut grid = Grid {
             agents: Vec::new(),
@@ -154,7 +198,7 @@ impl Grid{
         }
     }
 
-    pub fn object(&self, l:&Location) -> &Option<GridObject> {
+    pub fn object(&self, l: &Location) -> &Option<GridObject> {
         &self.objects[l.col as usize][l.row as usize]
     }
 
@@ -201,25 +245,24 @@ impl Grid{
                 }
             }
             print!("\n");
-        }        
-        for a in self.agents.iter() {          
+        }
+        for a in self.agents.iter() {
             let score = a.score;
             print!("Agent {} : {}\n", a.id, score.to_string());
         }
     }
 
     pub fn update(&mut self) {
-        for mut a in self.agents.iter_mut() {          
-            let d : Direction = rand::random();
+        for mut a in self.agents.iter_mut() {
+            let d: Direction = rand::random();
             let l = a.location;
             let new_loc = l.next_location(d);
-            self.objects[a.location.col as usize][a.location.row as usize] = None;
+            self.objects[l.col as usize][l.row as usize] = None;
             a.location = new_loc;
             self.objects[new_loc.col as usize][new_loc.row as usize] = Some(*a);
             //let path = super::astar::astar(reference.clone(), l, Location{col:1, row:1});
             print!("Move Agent {:?} to {:?}\n", a, l.next_location(d));
-        }    
+        }
         self.print();
     }
-
 }
