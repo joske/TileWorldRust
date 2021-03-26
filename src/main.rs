@@ -20,6 +20,6 @@ fn main() {
     let workspace = Rc::new(RefCell::new(grid));
 
     let application = Application::new(Some("be.sourcery.tileworld"), Default::default())
-        .expect("failed to initialize GTK application");
+        .expect("failed to initialize TileWorld");
     view::start_grid(workspace.clone(), application);
 }

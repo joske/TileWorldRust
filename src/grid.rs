@@ -4,9 +4,6 @@ use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
-use std::thread;
-use std::time::Duration;
-
 pub struct Grid {
     agents: Vec<GridObject>,
     tiles: Vec<GridObject>,
