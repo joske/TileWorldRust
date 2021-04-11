@@ -1,16 +1,11 @@
-extern crate rand;
+use std::collections::HashMap;
+use std::rc::Rc;
+use std::cell::RefCell;
 use super::{COLS, ROWS};
 use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
-pub struct Grid {
-    agents: Vec<GridObject>,
-    tiles: Vec<GridObject>,
-    holes: Vec<GridObject>,
-    obstacles: Vec<GridObject>,
-    objects: [[Option<GridObject>; COLS as usize]; ROWS as usize],
-}
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Direction {
@@ -90,14 +85,13 @@ impl Location {
             } else {
                 return Direction::Down;
             }
+        } else if self.col == other.col - 1 {
+            return Direction::Left;
         } else {
-            if self.col == other.col - 1 {
-                return Direction::Left;
-            } else {
-                return Direction::Right;
-            }
+            return Direction::Right;
         }
     }
+
     pub fn is_valid(&self, d: Direction) -> bool {
         match d {
             Direction::Up => self.row > 0,
@@ -130,7 +124,7 @@ pub enum Type {
     Obstacle,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct GridObject {
     pub id: u8,
     pub object_type: Type,
@@ -138,86 +132,38 @@ pub struct GridObject {
     pub score: u32,
 }
 
+pub struct Grid {
+    objects: HashMap<Location, Rc<RefCell<GridObject>>>,
+}
+
 impl Grid {
-    pub fn new(num_agents: u8, num_tiles: u8, num_holes: u8, num_obstacles: u8) -> Self {
-        let mut grid = Grid {
-            agents: Vec::new(),
-            tiles: Vec::new(),
-            holes: Vec::new(),
-            obstacles: Vec::new(),
-            objects: [[None; COLS as usize]; ROWS as usize],
-        };
-        grid.init(num_agents, num_tiles, num_holes, num_obstacles);
-        return grid;
-    }
-
-    pub fn init(&mut self, num_agents: u8, num_tiles: u8, num_holes: u8, num_obstacles: u8) {
-        let mut rng = rand::thread_rng();
-        for i in 1..=num_agents {
-            let a = GridObject {
-                location: self.random_location(),
-                object_type: Type::Agent,
-                id: i,
-                score: 0,
-            };
-            self.agents.push(a);
-            self.set_object(&a);
-        }
-        for i in 1..=num_tiles {
-            let t = GridObject {
-                location: self.random_location(),
-                object_type: Type::Tile,
-                id: i,
-                score: rng.gen_range(1..6),
-            };
-            self.tiles.push(t);
-            self.set_object(&t);
-        }
-        for i in 1..=num_holes {
-            let h = GridObject {
-                location: self.random_location(),
-                object_type: Type::Hole,
-                id: i,
-                score: 0,
-            };
-            self.holes.push(h);
-            self.set_object(&h);
-        }
-        for i in 1..=num_obstacles {
-            let o = GridObject {
-                location: self.random_location(),
-                object_type: Type::Obstacle,
-                id: i,
-                score: 0,
-            };
-            self.obstacles.push(o);
-            self.set_object(&o);
+    pub fn new() -> Self {
+        Grid {
+            objects: HashMap::new()
         }
     }
 
-    pub fn object(&self, l: &Location) -> &Option<GridObject> {
-        &self.objects[l.col as usize][l.row as usize]
+    pub fn set_object<'grid>(&mut self, o: Rc<RefCell<GridObject>>, l : &Location) {
+        let old_loc = &o.borrow().location;
+        self.objects.remove(old_loc);
+        self.objects.insert(*l, Rc::clone(&o));
     }
 
-    pub fn set_object<'grid>(&mut self, o: &'grid GridObject) {
-        self.objects[o.location.col as usize][o.location.row as usize] = Some(*o);
-    }
-
-    pub fn is_free(&self, location: Location) -> bool {
-        let o = self.objects[location.col as usize][location.row as usize];
+    pub fn is_free(&self, location: &Location) -> bool {
+        let o = self.objects.get(location);
         match o {
             None => true,
             Some(_) => false,
         }
     }
 
-    fn random_location(&self) -> Location {
+    pub fn random_location(&self) -> Location {
         let mut rng = rand::thread_rng();
         let mut c: u32 = rng.gen_range(1..COLS);
         let mut r: u32 = rng.gen_range(1..ROWS);
 
         let mut l = Location { col: c, row: r };
-        while !self.is_free(l) {
+        while !self.is_free(&l) {
             c = rng.gen_range(1..COLS);
             r = rng.gen_range(1..ROWS);
             l = Location { col: c, row: r };
@@ -229,37 +175,23 @@ impl Grid {
         for c in 0..COLS {
             for r in 0..ROWS {
                 let l = Location { col: c, row: r };
-                if !self.is_free(l) {
-                    let o = &self.objects[l.col as usize][l.row as usize];
-                    match o.unwrap().object_type {
+                if !self.is_free(&l) {
+                    let o = self.objects.get(&l);
+                    match o.unwrap().borrow().object_type {
                         Type::Agent => print!("A"),
                         Type::Hole => print!("H"),
-                        Type::Tile => print!("{}", o.unwrap().score.to_string()),
+                        Type::Tile => print!("{}", o.unwrap().borrow().score.to_string()),
                         Type::Obstacle => print!("#"),
                     }
                 } else {
                     print!(".");
                 }
             }
-            print!("\n");
+            println!();
         }
-        for a in self.agents.iter() {
-            let score = a.score;
-            print!("Agent {} : {}\n", a.id, score.to_string());
-        }
+        println!();
     }
 
-    pub fn update(&mut self) {
-        for mut a in self.agents.iter_mut() {
-            let d: Direction = rand::random();
-            let l = a.location;
-            let new_loc = l.next_location(d);
-            self.objects[l.col as usize][l.row as usize] = None;
-            a.location = new_loc;
-            self.objects[new_loc.col as usize][new_loc.row as usize] = Some(*a);
-            //let path = super::astar::astar(reference.clone(), l, Location{col:1, row:1});
-            print!("Move Agent {:?} to {:?}\n", a, l.next_location(d));
-        }
-        self.print();
-    }
 }
+
+

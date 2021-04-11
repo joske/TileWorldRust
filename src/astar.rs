@@ -52,7 +52,7 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
         {
             if cur_location.is_valid(d.clone()) {
                 let next_location = cur_location.next_location(d.clone());
-                if next_location == to || grid.is_free(next_location) {
+                if next_location == to || grid.is_free(&next_location) {
                     let h = next_location.distance(to);
                     let g = next_location.distance(from);
                     let mut new_path = cur_node.0.path.clone();
@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn test_path() {
-        let grid = Grid::new(0, 0, 0, 0);
+        let grid = Grid::new();
         let from = Location { col: 0, row: 0 };
         let to = Location { col: 1, row: 1 };
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn test_path2() {
-        let grid = Grid::new(0, 0, 0, 0);
+        let grid = Grid::new();
         let from = Location { col: 0, row: 0 };
         let to = Location { col: 2, row: 2 };
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
@@ -109,8 +109,7 @@ mod tests {
 
     #[test]
     fn test_big_grid() {
-        let mut grid = Grid::new(0, 0, 0, 0);
-        grid.init(1, 5, 5, 5);
+        let grid = Grid::new();
         let from = Location { col: 0, row: 0 };
         let to = Location { col: 10, row: 10 };
         let path = astar(Rc::new(RefCell::new(grid)), from, to);

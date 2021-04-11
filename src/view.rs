@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 use super::{COLS, ROWS, MAG};
 
-pub fn start_grid(workspace: Rc<RefCell<Grid>>, application : gtk::Application) {
+pub fn start_grid(workspace: Rc<RefCell<Grid<'static>>>, application : gtk::Application) {
 application.connect_activate(move |app| {
     let window = ApplicationWindow::new(app);
     window.set_title("TileWorld");
@@ -57,11 +57,11 @@ application.connect_activate(move |app| {
         }
         Inhibit(false)
     }));
-    glib::timeout_add_local(200, clone!(@weak workspace => @default-return Continue(true), move || {
-        area.queue_draw_area(0, 0, (COLS * MAG) as i32, (ROWS * MAG) as i32);
-        workspace.borrow_mut().update();
-        glib::Continue(true)
-    }));
+    // glib::timeout_add_local(200, clone!(@weak workspace => @default-return Continue(true), move || {
+    //     area.queue_draw_area(0, 0, (COLS * MAG) as i32, (ROWS * MAG) as i32);
+    //     workspace.borrow_mut().update();
+    //     glib::Continue(true)
+    // }));
     window.show_all();
 });
 
