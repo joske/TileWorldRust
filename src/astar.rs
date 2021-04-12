@@ -56,7 +56,6 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
                 if next_location == to || grid.is_free(&next_location) {
                     let h = next_location.distance(to);
                     let g = cur_node.0.path.len() as u32;
-                    println!("direction {:?} next {:?} cost {}", d, next_location, g + h);
                     let mut new_path = cur_node.0.path.clone();
                     new_path.push(*d);
                     let child = Node {
@@ -68,7 +67,6 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
                         for i in open_list.iter() {
                             let n = &i.borrow().0;
                             if n.location == child.location && n.fscore < child.fscore {
-                                println!("{:?} already in open list: {:?}", child, n);
                                 continue 'outer;
                             }
                         }
