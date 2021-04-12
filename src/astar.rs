@@ -136,7 +136,7 @@ mod tests {
             tile : None,
             hole : None,  
         };
-        grid.set_object(Rc::new(RefCell::new(obst)), &obst_location);
+        grid.set_object(Rc::new(RefCell::new(obst)), &obst_location, &obst_location);
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         let p = path.unwrap();
         assert_eq!(p.len(), 2);

@@ -36,7 +36,7 @@ fn main() {
             has_tile: false,
             state: crate::grid::State::Idle,
         }));
-        grid.set_object(Rc::clone(&a), &l);
+        grid.set_object(Rc::clone(&a), &l, &l);
         agents.push(a);
     }
     for i in 1..=5 {
@@ -51,7 +51,7 @@ fn main() {
             has_tile: false,
             state: crate::grid::State::Idle,
         }));
-        grid.set_object(Rc::clone(&t), &l);
+        grid.set_object(Rc::clone(&t), &l, &l);
         tiles.push(t);
     }
     for i in 1..=5 {
@@ -66,7 +66,7 @@ fn main() {
             has_tile: false,
             state: crate::grid::State::Idle,
         }));
-        grid.set_object(Rc::clone(&h), &l);
+        grid.set_object(Rc::clone(&h), &l, &l);
         holes.push(h);
     }
     for i in 1..=5 {
@@ -81,7 +81,7 @@ fn main() {
             has_tile: false,
             state: crate::grid::State::Idle,
         }));
-        grid.set_object(Rc::clone(&o), &l);
+        grid.set_object(Rc::clone(&o), &l, &l);
         obstacles.push(o);
     }
     let g = Rc::new(RefCell::new(grid));
@@ -144,7 +144,7 @@ fn main() {
                 }
                 g.borrow_mut().remove(&l);
                 let new_location = g.borrow().random_location();
-                g.borrow_mut().set_object(Rc::clone(&best_tile), &new_location);
+                g.borrow_mut().set_object(Rc::clone(&best_tile), &l, &new_location);
                 best_tile.borrow_mut().location = new_location;
             }
             if let Some(mut path) =
@@ -158,7 +158,7 @@ fn main() {
                     || next_location == best_tile.borrow().location
                 {
                     println!("allowed, moving");
-                    g.borrow_mut().set_object(Rc::clone(&a), &next_location);
+                    g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
                     agent.location = next_location;
                 } else {
                     println!("can't move!");
@@ -184,7 +184,7 @@ fn main() {
                 }
                 g.borrow_mut().remove(&l);
                 let new_location = g.borrow().random_location();
-                g.borrow_mut().set_object(Rc::clone(&best_hole), &new_location);
+                g.borrow_mut().set_object(Rc::clone(&best_hole), &l, &new_location);
                 best_hole.borrow_mut().location = new_location;
             }
             if let Some(mut path) =
@@ -198,7 +198,7 @@ fn main() {
                     || next_location == best_hole.borrow().location
                 {
                     println!("allowed, moving");
-                    g.borrow_mut().set_object(Rc::clone(&a), &next_location);
+                    g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
                     a.borrow_mut().location = next_location;
                 }
             }

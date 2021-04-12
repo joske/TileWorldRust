@@ -162,8 +162,7 @@ impl Grid {
         }
     }
 
-    pub fn set_object(&mut self, o: Rc<RefCell<GridObject>>, l : &Location) {
-        let old_loc = &o.borrow().location;
+    pub fn set_object(&mut self, o: Rc<RefCell<GridObject>>, old_loc : &Location, l : &Location) {        
         self.objects.remove(old_loc);
         self.objects.insert(*l, Rc::clone(&o));
     }
