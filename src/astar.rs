@@ -119,6 +119,30 @@ mod tests {
     }
 
     #[test]
+    fn test_path_obstacle() {
+        let mut grid = Grid::new();
+        let from = Location { col: 0, row: 0 };
+        let to = Location { col: 1, row: 1 };
+        let obst_location = Location{ col: 1, row: 0};
+        let obst = crate::grid::GridObject { 
+            id :0,
+            object_type : crate::grid::Type::Obstacle,
+            location : obst_location,
+            score : 0,
+            has_tile : false,
+            state : crate::grid::State::Idle,
+            tile : None,
+            hole : None,  
+        };
+        grid.set_object(Rc::new(RefCell::new(obst)), &obst_location);
+        let path = astar(Rc::new(RefCell::new(grid)), from, to);
+        let p = path.unwrap();
+        assert_eq!(p.len(), 2);
+        assert_eq!(p[0], Direction::Down);
+        assert_eq!(p[1], Direction::Right);
+    }
+
+    #[test]
     fn test_big_grid() {
         let grid = Grid::new();
         let from = Location { col: 0, row: 0 };
