@@ -124,12 +124,23 @@ pub enum Type {
     Obstacle,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum State {
+    Idle,
+    MoveToTile,
+    MoveToHole,
+}
+
 #[derive(Debug)]
 pub struct GridObject {
     pub id: u8,
     pub object_type: Type,
     pub location: Location,
     pub score: u32,
+    pub tile: Option<Rc<RefCell<GridObject>>>,
+    pub hole: Option<Rc<RefCell<GridObject>>>,
+    pub has_tile: bool,
+    pub state : State,
 }
 
 pub struct Grid {
@@ -143,10 +154,22 @@ impl Grid {
         }
     }
 
-    pub fn set_object<'grid>(&mut self, o: Rc<RefCell<GridObject>>, l : &Location) {
+    pub fn object(&self, l: &Location) -> Option<Rc<RefCell<GridObject>>> {
+        let o = self.objects.get(l);
+        match o {
+            Some(go) => Some(Rc::clone(go)),
+            None => None,
+        }
+    }
+
+    pub fn set_object(&mut self, o: Rc<RefCell<GridObject>>, l : &Location) {
         let old_loc = &o.borrow().location;
         self.objects.remove(old_loc);
         self.objects.insert(*l, Rc::clone(&o));
+    }
+
+    pub fn remove(&mut self, l : &Location) {
+        self.objects.remove(l);
     }
 
     pub fn is_free(&self, location: &Location) -> bool {
@@ -168,12 +191,13 @@ impl Grid {
             r = rng.gen_range(1..ROWS);
             l = Location { col: c, row: r };
         }
+        println!("random location: {:?}", l);
         return l;
     }
 
     pub fn print(&self) {
-        for c in 0..COLS {
-            for r in 0..ROWS {
+        for r in 0..ROWS {
+            for c in 0..COLS {
                 let l = Location { col: c, row: r };
                 if !self.is_free(&l) {
                     let o = self.objects.get(&l);

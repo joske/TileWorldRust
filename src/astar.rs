@@ -50,13 +50,13 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
         closed_list.insert(Rc::new(cur_location));
         for d in [Direction::Up, Direction::Down, Direction::Left, Direction::Right,].iter()
         {
-            if cur_location.is_valid(d.clone()) {
-                let next_location = cur_location.next_location(d.clone());
+            if cur_location.is_valid(*d) {
+                let next_location = cur_location.next_location(*d);
                 if next_location == to || grid.is_free(&next_location) {
                     let h = next_location.distance(to);
                     let g = next_location.distance(from);
                     let mut new_path = cur_node.0.path.clone();
-                    new_path.insert(0, d.clone());
+                    new_path.insert(0, *d);
                     let child = Node {
                         location: next_location,
                         path : new_path,
@@ -95,6 +95,17 @@ mod tests {
 
     #[test]
     fn test_path2() {
+        let grid = Grid::new();
+        let from = Location { col: 0, row: 0 };
+        let to = Location { col: 0, row: 1 };
+        let path = astar(Rc::new(RefCell::new(grid)), from, to);
+        let p = path.unwrap();
+        assert_eq!(p.len(), 1);
+        assert_eq!(p[0], Direction::Down);
+    }
+
+    #[test]
+    fn test_path3() {
         let grid = Grid::new();
         let from = Location { col: 0, row: 0 };
         let to = Location { col: 2, row: 2 };
