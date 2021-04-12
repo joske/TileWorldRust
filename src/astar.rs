@@ -6,7 +6,7 @@ use super::grid::Location;
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BinaryHeap, HashSet};
 
-#[derive(Eq, Hash, Clone)]
+#[derive(Debug, Eq, Hash, Clone)]
 struct Node {
     location: Location,
     fscore: u32,
@@ -48,15 +48,17 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
             return Some(cur_node.0.path.clone());
         }
         closed_list.insert(Rc::new(cur_location));
+        'outer: 
         for d in [Direction::Up, Direction::Down, Direction::Left, Direction::Right,].iter()
         {
             if cur_location.is_valid(*d) {
                 let next_location = cur_location.next_location(*d);
                 if next_location == to || grid.is_free(&next_location) {
                     let h = next_location.distance(to);
-                    let g = next_location.distance(from);
+                    let g = cur_node.0.path.len() as u32;
+                    println!("direction {:?} next {:?} cost {}", d, next_location, g + h);
                     let mut new_path = cur_node.0.path.clone();
-                    new_path.insert(0, *d);
+                    new_path.push(*d);
                     let child = Node {
                         location: next_location,
                         path : new_path,
@@ -64,8 +66,10 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
                     };
                     if !closed_list.contains(&next_location) {
                         for i in open_list.iter() {
-                            if (*i.borrow()).0.location == child.location {
-                                continue;
+                            let n = &i.borrow().0;
+                            if n.location == child.location && n.fscore < child.fscore {
+                                println!("{:?} already in open list: {:?}", child, n);
+                                continue 'outer;
                             }
                         }
                         open_list.push(Rc::new(RefCell::new(Reverse(child))));
@@ -89,8 +93,8 @@ mod tests {
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         let p = path.unwrap();
         assert_eq!(p.len(), 2);
-        assert_eq!(p[0], Direction::Right);
-        assert_eq!(p[1], Direction::Down);
+        assert_eq!(p[0], Direction::Down);
+        assert_eq!(p[1], Direction::Right);
     }
 
     #[test]
@@ -112,10 +116,10 @@ mod tests {
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         let p = path.unwrap();
         assert_eq!(p.len(), 4);
-        assert_eq!(p[0], Direction::Right);
-        assert_eq!(p[1], Direction::Right);
-        assert_eq!(p[2], Direction::Down);
-        assert_eq!(p[3], Direction::Down);
+        assert_eq!(p[0], Direction::Down);
+        assert_eq!(p[1], Direction::Down);
+        assert_eq!(p[2], Direction::Right);
+        assert_eq!(p[3], Direction::Right);
     }
 
     #[test]
@@ -146,10 +150,11 @@ mod tests {
     fn test_big_grid() {
         let grid = Grid::new();
         let from = Location { col: 0, row: 0 };
-        let to = Location { col: 10, row: 10 };
+        let to = Location { col: 9, row: 9 };
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         assert!(path.is_some());
+        println!("{:?}", path);
         let p = path.unwrap();
-        assert_eq!(p.len(), 20);
+        assert_eq!(p.len(), 18);
     }
 }
