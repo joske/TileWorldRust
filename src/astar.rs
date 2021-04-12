@@ -151,8 +151,16 @@ mod tests {
         let to = Location { col: 9, row: 9 };
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         assert!(path.is_some());
-        println!("{:?}", path);
         let p = path.unwrap();
         assert_eq!(p.len(), 18);
+    }
+
+    #[test]
+    fn test_can_not_reach() {
+        let grid = Grid::new();
+        let from = Location { col: 0, row: 0 };
+        let to = Location { col: 100, row: 100 }; // these are outside of the grid, no way to find a path
+        let path = astar(Rc::new(RefCell::new(grid)), from, to);
+        assert!(path.is_none());
     }
 }
