@@ -132,14 +132,15 @@ fn main() {
         tiles: &Vec<Rc<RefCell<GridObject>>>,
         holes: &Vec<Rc<RefCell<GridObject>>>,
     ) {
-        if let Some(best_tile) = &a.borrow().tile {
-            let l = a.borrow().location;
+        let mut agent = a.borrow_mut();
+        if let Some(best_tile) = agent.tile.clone() {
+            let l = agent.location;
             if l == best_tile.borrow().location {
                 // arrived!
-                a.borrow_mut().has_tile = true;
+                agent.has_tile = true;
                 if let Some(best_hole) = get_closest(&holes, l) {
-                    a.borrow_mut().hole = Some(Rc::clone(&best_hole));
-                    a.borrow_mut().state = crate::grid::State::MoveToHole;
+                    agent.hole = Some(Rc::clone(&best_hole));
+                    agent.state = crate::grid::State::MoveToHole;
                 }
                 g.borrow_mut().remove(&l);
                 let new_location = g.borrow().random_location();
@@ -158,7 +159,7 @@ fn main() {
                 {
                     println!("allowed, moving");
                     g.borrow_mut().set_object(Rc::clone(&a), &next_location);
-                    a.borrow_mut().location = next_location;
+                    agent.location = next_location;
                 } else {
                     println!("can't move!");
                 }
