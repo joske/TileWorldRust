@@ -268,16 +268,20 @@ fn move_to_tile(
             }
         }
         if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_tile.borrow().location) {
-            println!("path: {:?}", path);
-            let next_direction = path.remove(0);
-            let next_location = l.next_location(next_direction);
-            println!("next location: {:?}", next_location);
-            if g.borrow().is_free(&next_location) || next_location == best_tile.borrow().location {
-                println!("allowed, moving");
-                g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
-                agent.location = next_location;
-            } else {
-                println!("can't move!");
+            if path.len() != 0 {
+                println!("path: {:?}", path);
+                let next_direction = path.remove(0);
+                let next_location = l.next_location(next_direction);
+                println!("next location: {:?}", next_location);
+                if g.borrow().is_free(&next_location)
+                    || next_location == best_tile.borrow().location
+                {
+                    println!("allowed, moving");
+                    g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
+                    agent.location = next_location;
+                } else {
+                    println!("can't move!");
+                }
             }
         }
     }
@@ -316,18 +320,16 @@ fn move_to_hole(
         }
         if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_hole.borrow().location) {
             if path.len() != 0 {
-                if path.len() != 0 {
-                    println!("path: {:?}", path);
-                    let next_direction = path.remove(0);
-                    let next_location = l.next_location(next_direction);
-                    println!("next location: {:?}", next_location);
-                    if g.borrow().is_free(&next_location)
-                        || next_location == best_hole.borrow().location
-                    {
-                        println!("allowed, moving");
-                        g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
-                        agent.location = next_location;
-                    }
+                println!("path: {:?}", path);
+                let next_direction = path.remove(0);
+                let next_location = l.next_location(next_direction);
+                println!("next location: {:?}", next_location);
+                if g.borrow().is_free(&next_location)
+                    || next_location == best_hole.borrow().location
+                {
+                    println!("allowed, moving");
+                    g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
+                    agent.location = next_location;
                 }
             }
         }
