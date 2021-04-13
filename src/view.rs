@@ -3,11 +3,15 @@ use super::grid::Location;
 use super::grid::Type;
 use crate::grid::WrappedGridObject;
 use crate::GridObject;
+use cairo::{Context, FontSlant, FontWeight};
 use gio::prelude::*;
 use glib::clone;
 use gtk::*;
 use std::cell::RefCell;
 use std::rc::Rc;
+
+use rand::thread_rng;
+use rand::Rng;
 
 use super::{COLS, MAG, ROWS};
 
@@ -21,12 +25,12 @@ pub fn start_grid(application: gtk::Application) {
     application.connect_activate(move |app| {
     let window = ApplicationWindow::new(app);
     window.set_title("TileWorld");
-    window.set_default_size((COLS * MAG) as i32 + 100, (ROWS * MAG) as i32);
+    window.set_default_size((COLS * MAG) as i32 + 200, (ROWS * MAG) as i32);
     let frame = &Frame::new(None);
     window.add(frame);
     let area = DrawingArea::new();
     frame.add(&area);
-    area.connect_draw(clone!(@weak workspace => @default-return Inhibit(false), move |_, cr| {
+    area.connect_draw(clone!(@weak workspace, @weak wrapped_agents => @default-return Inhibit(false), move |_, cr| {
         let ref grid = *workspace.borrow();
         use std::f64::consts::PI;
         cr.set_source_rgb(1., 1., 1.);
@@ -48,12 +52,16 @@ pub fn start_grid(application: gtk::Application) {
                             cr.new_sub_path();
                             if ob.borrow().has_tile {
                                 cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
+                                if let Some(t) = &ob.borrow().tile {
+                                    draw_text(cr, x + 18. / 4.,  y + 15., &t.borrow().score.to_string());
+                                }
                             }
                             cr.stroke();
                         }
                         Type::Tile => {
                             cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
                             cr.stroke();
+                            draw_text(cr, x + 18. / 4.,  y + 15., &ob.borrow().score.to_string());
                         }
                         Type::Hole => {
                             cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
@@ -66,11 +74,23 @@ pub fn start_grid(application: gtk::Application) {
                     },
                 }
             }
+            let x = COLS as f64 * MAG as f64 + 50 as f64;
+            let y = 20 as f64;
+            let agents = wrapped_agents.borrow();
+             for a in agents.iter() {
+                 let id = a.borrow().id as f64;
+                 let score = a.borrow().score as f64;
+                  let (r, b, g) = get_color(id as u8);
+                  cr.set_source_rgb(r, g, b);
+                  let text = format!("Agent({}): {}", id, score);
+                  draw_text(cr, x, y + id * MAG as f64, &String::from(text));
+            }
+        
         }
         Inhibit(false)
     }));
     glib::timeout_add_local(200, clone!(@weak workspace, @weak wrapped_agents, @weak wrapped_tiles, @weak wrapped_holes => @default-return Continue(true), move || {
-        area.queue_draw_area(0, 0, (COLS * MAG) as i32, (ROWS * MAG) as i32);
+        area.queue_draw_area(0, 0, (COLS * MAG) as i32 + 200, (ROWS * MAG) as i32);
         let mut agents = wrapped_agents.borrow_mut();
         let tiles = wrapped_tiles.borrow_mut();
         let holes = wrapped_holes.borrow_mut();
@@ -84,6 +104,15 @@ pub fn start_grid(application: gtk::Application) {
 });
 
     application.run(&[]);
+}
+
+fn draw_text(cr: &Context, x: f64, y: f64, text: &String) {
+    cr.select_font_face("Sans", FontSlant::Normal, FontWeight::Normal);
+    cr.set_font_size(11.);
+
+    cr.move_to(x, y);
+    cr.show_text(text);
+    cr.stroke();
 }
 
 fn get_color(num: u8) -> (f64, f64, f64) {
@@ -130,11 +159,12 @@ fn create_objects(
     }
     for i in 1..=num_tiles {
         let l = grid.random_location();
+        let mut rng = thread_rng();
         let t = Rc::new(RefCell::new(GridObject {
             location: l,
             object_type: crate::grid::Type::Tile,
             id: i,
-            score: 0, //rng.gen_range(1..6),
+            score: rng.gen_range(1..6),
             tile: None,
             hole: None,
             has_tile: false,
