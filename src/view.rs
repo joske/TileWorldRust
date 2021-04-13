@@ -1,7 +1,7 @@
-use crate::grid::WrappedGridObject;
 use super::grid::Grid;
 use super::grid::Location;
 use super::grid::Type;
+use crate::grid::WrappedGridObject;
 use crate::GridObject;
 use gio::prelude::*;
 use glib::clone;
@@ -77,6 +77,7 @@ pub fn start_grid(application: gtk::Application) {
         for a in agents.iter_mut() {
             crate::grid::update_agent(Rc::clone(&workspace), Rc::clone(&a), &tiles, &holes);
         }
+        workspace.borrow().print();
         glib::Continue(true)
     }));
     window.show_all();
@@ -96,8 +97,17 @@ fn get_color(num: u8) -> (f64, f64, f64) {
     }
 }
 
-fn create_objects(num_agents : u8, num_tiles : u8, num_holes : u8, num_obstacles : u8, 
-    wgrid : Rc<RefCell<Grid>>) -> (Vec<WrappedGridObject>, Vec<WrappedGridObject>, Vec<WrappedGridObject>) {
+fn create_objects(
+    num_agents: u8,
+    num_tiles: u8,
+    num_holes: u8,
+    num_obstacles: u8,
+    wgrid: Rc<RefCell<Grid>>,
+) -> (
+    Vec<WrappedGridObject>,
+    Vec<WrappedGridObject>,
+    Vec<WrappedGridObject>,
+) {
     let mut grid = wgrid.borrow_mut();
     let mut agents = Vec::new();
     let mut tiles = Vec::new();
@@ -163,5 +173,5 @@ fn create_objects(num_agents : u8, num_tiles : u8, num_holes : u8, num_obstacles
         grid.set_object(Rc::clone(&o), &l, &l);
         obstacles.push(o);
     }
-    return (agents, tiles, holes)
+    return (agents, tiles, holes);
 }
