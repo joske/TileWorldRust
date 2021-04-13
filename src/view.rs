@@ -53,7 +53,7 @@ pub fn start_grid(application: gtk::Application) {
                             if ob.borrow().has_tile {
                                 cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
                                 if let Some(t) = &ob.borrow().tile {
-                                    draw_text(cr, x + 18. / 4.,  y + 15., &t.borrow().score.to_string());
+                                    draw_text(cr, x + 6.,  y + 13., &t.borrow().score.to_string());
                                 }
                             }
                             cr.stroke();
@@ -61,7 +61,7 @@ pub fn start_grid(application: gtk::Application) {
                         Type::Tile => {
                             cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
                             cr.stroke();
-                            draw_text(cr, x + 18. / 4.,  y + 15., &ob.borrow().score.to_string());
+                            draw_text(cr, x + 6.,  y + 13., &ob.borrow().score.to_string());
                         }
                         Type::Hole => {
                             cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
