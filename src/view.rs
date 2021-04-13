@@ -107,8 +107,8 @@ pub fn start_grid(application: gtk::Application) {
 }
 
 fn draw_text(cr: &Context, x: f64, y: f64, text: &String) {
-    cr.select_font_face("Sans", FontSlant::Normal, FontWeight::Normal);
-    cr.set_font_size(11.);
+    cr.select_font_face("Arial", FontSlant::Normal, FontWeight::Normal);
+    cr.set_font_size(14.);
 
     cr.move_to(x, y);
     cr.show_text(text);
