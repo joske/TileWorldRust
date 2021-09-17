@@ -40,7 +40,7 @@ pub fn start_grid(application: gtk::Application) {
         let ref grid = *workspace.borrow();
         use std::f64::consts::PI;
         cr.set_source_rgb(1., 1., 1.);
-        cr.paint();
+        cr.paint().map_err(|err| println!("{:?}", err)).ok();
         cr.set_line_width(2.);
         for r in 0..ROWS {
             for c in 0..COLS {
@@ -62,20 +62,20 @@ pub fn start_grid(application: gtk::Application) {
                                     draw_text(cr, x + 6.,  y + 13., &t.borrow().score.to_string());
                                 }
                             }
-                            cr.stroke();
+                            cr.stroke().map_err(|err| println!("{:?}", err)).ok();
                         }
                         Type::Tile => {
                             cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
-                            cr.stroke();
+                            cr.stroke().map_err(|err| println!("{:?}", err)).ok();
                             draw_text(cr, x + 6.,  y + 13., &ob.borrow().score.to_string());
                         }
                         Type::Hole => {
                             cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
-                            cr.fill();
+                            cr.fill().map_err(|err| println!("{:?}", err)).ok();
                         }
                         Type::Obstacle => {
                             cr.rectangle(x, y, MAG as f64, MAG as f64);
-                            cr.fill();
+                            cr.fill().map_err(|err| println!("{:?}", err)).ok();
                         }
                     },
                 }
@@ -117,8 +117,8 @@ fn draw_text(cr: &Context, x: f64, y: f64, text: &String) {
     cr.set_font_size(14.);
 
     cr.move_to(x, y);
-    cr.show_text(text);
-    cr.stroke();
+    cr.show_text(text).map_err(|err| println!("{:?}", err)).ok();
+    cr.stroke().map_err(|err| println!("{:?}", err)).ok();
 }
 
 fn get_color(num: u8) -> (f64, f64, f64) {
