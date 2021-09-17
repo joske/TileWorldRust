@@ -9,8 +9,11 @@ use gtk::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
-use crate::gio::ApplicationExt;
+use crate::gio::prelude::ApplicationExt;
 use crate::gio::prelude::ApplicationExtManual;
+use crate::gtk::prelude::GtkWindowExt;
+use crate::gtk::prelude::ContainerExt;
+use crate::gtk::prelude::WidgetExt;
 use glib::Continue;
 
 use rand::thread_rng;
@@ -106,7 +109,7 @@ pub fn start_grid(application: gtk::Application) {
     window.show_all();
 });
 
-    application.run(&[]);
+    application.run();
 }
 
 fn draw_text(cr: &Context, x: f64, y: f64, text: &String) {

@@ -15,8 +15,7 @@ pub const ROWS: u32 = 40;
 const MAG: u32 = 20;
 
 fn main() {
-    let application = Application::new(Some("be.sourcery.tileworld"), Default::default())
-        .expect("failed to initialize TileWorld");
+    let application = Application::new(Some("be.sourcery.tileworld"), Default::default());
     view::start_grid(application);
 
 }
