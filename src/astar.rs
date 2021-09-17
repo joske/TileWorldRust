@@ -55,7 +55,7 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
                 let next_location = cur_location.next_location(*d);
                 if next_location == to || grid.is_free(&next_location) {
                     let h = next_location.distance(to);
-                    let g = cur_node.0.path.len() as u32;
+                    let g = cur_node.0.path.len() as u32 + 1;
                     let mut new_path = cur_node.0.path.clone();
                     new_path.push(*d);
                     let child = Node {
