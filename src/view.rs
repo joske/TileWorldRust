@@ -19,7 +19,7 @@ use glib::Continue;
 use rand::thread_rng;
 use rand::Rng;
 
-use super::{AGENTS, OBJECTS, COLS, MAG, ROWS};
+use super::{AGENTS, OBJECTS, COLS, MAG, ROWS, DELAY};
 
 pub fn start_grid(application: gtk::Application) {
     let grid = Grid::new();
@@ -95,7 +95,7 @@ pub fn start_grid(application: gtk::Application) {
         }
         Inhibit(false)
     }));
-    glib::timeout_add_local(Duration::from_millis(200), glib::clone!(@weak workspace, @weak wrapped_agents, @weak wrapped_tiles, @weak wrapped_holes => @default-return Continue(true), move || {
+    glib::timeout_add_local(Duration::from_millis(DELAY), glib::clone!(@weak workspace, @weak wrapped_agents, @weak wrapped_tiles, @weak wrapped_holes => @default-return Continue(true), move || {
         area.queue_draw_area(0, 0, (COLS * MAG) as i32 + 200, (ROWS * MAG) as i32);
         let mut agents = wrapped_agents.borrow_mut();
         let tiles = wrapped_tiles.borrow_mut();
