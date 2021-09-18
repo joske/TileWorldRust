@@ -15,7 +15,7 @@ pub const ROWS: u32 = 40;
 const MAG: u32 = 20;
 const AGENTS: u8 = 6;
 const OBJECTS: u8 = 20;
-const DELAY: u32 = 100;
+const DELAY: u64 = 100;
 
 fn main() {
     let application = Application::new(Some("be.sourcery.tileworld"), Default::default());
