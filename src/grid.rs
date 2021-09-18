@@ -220,7 +220,7 @@ pub fn update_agent(
     let state = a.borrow().state;
     match state {
         crate::grid::State::Idle => idle_agent(Rc::clone(&a), &tiles),
-        crate::grid::State::MoveToTile => move_to_tile(g, Rc::clone(&a), &holes),
+        crate::grid::State::MoveToTile => move_to_tile(g, Rc::clone(&a), &tiles, &holes),
         crate::grid::State::MoveToHole => move_to_hole(g, Rc::clone(&a), &holes),
     }
 }
@@ -241,10 +241,11 @@ fn idle_agent(a: Rc<RefCell<GridObject>>, tiles: &Vec<Rc<RefCell<GridObject>>>) 
 fn move_to_tile(
     g: Rc<RefCell<Grid>>,
     a: Rc<RefCell<GridObject>>,
+    tiles: &Vec<Rc<RefCell<GridObject>>>,
     holes: &Vec<Rc<RefCell<GridObject>>>,
 ) {
     let mut agent = a.borrow_mut();
-    if let Some(best_tile) = agent.tile.clone() {
+    if let Some(mut best_tile) = agent.tile.clone() {
         let l = agent.location;
         if l == best_tile.borrow().location {
             // arrived!
@@ -267,6 +268,12 @@ fn move_to_tile(
                 // our tile is gone
                 agent.state = State::Idle;
                 return;
+            }
+        }
+        if let Some(better_tile) = get_closest(&tiles, l) {
+            if better_tile.borrow().location.distance(agent.location) < best_tile.borrow().location.distance(agent.location) {
+                best_tile = better_tile;
+                agent.tile = Some(Rc::clone(&best_tile));
             }
         }
         if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_tile.borrow().location) {
@@ -295,7 +302,7 @@ fn move_to_hole(
     holes: &Vec<Rc<RefCell<GridObject>>>,
 ) {
     let mut agent = a.borrow_mut();
-    if let Some(best_hole) = agent.hole.clone() {
+    if let Some(mut best_hole) = agent.hole.clone() {
         let l = agent.location;
         if l == best_hole.borrow().location {
             // arrived!
@@ -320,6 +327,12 @@ fn move_to_hole(
                     agent.state = State::MoveToHole;
                 }
                 return;
+            }
+        }
+        if let Some(better_hole) = get_closest(&holes, l) {
+            if better_hole.borrow().location.distance(agent.location) < best_hole.borrow().location.distance(agent.location) {
+                best_hole = better_hole;
+                agent.hole = Some(Rc::clone(&best_hole));
             }
         }
         if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_hole.borrow().location) {
