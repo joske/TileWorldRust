@@ -258,7 +258,9 @@ fn move_to_tile(
             g.borrow_mut()
                 .set_object(Rc::clone(&best_tile), &l, &new_location); // set the tile in a new location
             best_tile.borrow_mut().location = new_location;
+            g.borrow_mut().set_object(Rc::clone(&a), &l, &l); // set the agent in the old place
             agent.state = State::MoveToHole;
+            return;
         }
         if let Some(o) = g.borrow().object(&best_tile.borrow().location) {
             if *best_tile.borrow() != *o.borrow() {
@@ -307,6 +309,8 @@ fn move_to_hole(
             g.borrow_mut()
                 .set_object(Rc::clone(&best_hole), &l, &new_location); //create in new location
             best_hole.borrow_mut().location = new_location;
+            g.borrow_mut().set_object(Rc::clone(&a), &l, &l); // set the agent in the old place
+            return;
         }
         if let Some(o) = g.borrow().object(&best_hole.borrow().location) {
             if *best_hole.borrow() != *o.borrow() {

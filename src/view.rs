@@ -19,12 +19,12 @@ use glib::Continue;
 use rand::thread_rng;
 use rand::Rng;
 
-use super::{COLS, MAG, ROWS};
+use super::{AGENTS, OBJECTS, COLS, MAG, ROWS};
 
 pub fn start_grid(application: gtk::Application) {
     let grid = Grid::new();
     let workspace = Rc::new(RefCell::new(grid));
-    let (agents, tiles, holes) = create_objects(5, 20, 20, 20, workspace.clone());
+    let (agents, tiles, holes) = create_objects(AGENTS, OBJECTS, OBJECTS, OBJECTS, workspace.clone());
     let wrapped_agents = Rc::new(RefCell::new(agents));
     let wrapped_tiles = Rc::new(RefCell::new(tiles));
     let wrapped_holes = Rc::new(RefCell::new(holes));
