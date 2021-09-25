@@ -43,7 +43,7 @@ impl PartialEq for Node {
 pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Option<Vec<Direction>> {
     let grid = reference.borrow();
     let mut open_list : PriorityQueue<Node, Reverse<u32>> = PriorityQueue::new();
-    let mut closed_list: HashSet<Rc<Location>> = HashSet::new();
+    let mut closed_list: HashSet<Location> = HashSet::new();
     let from_node = Node {
         location: from,
         fscore: 0,
@@ -56,7 +56,7 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
         if cur_location == to {
             return Some(cur_node.path.clone());
         }
-        closed_list.insert(Rc::new(cur_location));
+        closed_list.insert(cur_location);
         'outer: 
         for d in [Direction::Up, Direction::Down, Direction::Left, Direction::Right,].iter()
         {

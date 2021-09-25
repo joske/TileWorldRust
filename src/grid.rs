@@ -219,9 +219,9 @@ pub fn update_agent(
     println!("agent {:?}", a.borrow());
     let state = a.borrow().state;
     match state {
-        crate::grid::State::Idle => idle_agent(Rc::clone(&a), &tiles),
-        crate::grid::State::MoveToTile => move_to_tile(g, Rc::clone(&a), &tiles, &holes),
-        crate::grid::State::MoveToHole => move_to_hole(g, Rc::clone(&a), &holes),
+        State::Idle => idle_agent(Rc::clone(&a), &tiles),
+        State::MoveToTile => move_to_tile(g, Rc::clone(&a), &tiles, &holes),
+        State::MoveToHole => move_to_hole(g, Rc::clone(&a), &holes),
     }
 }
 
@@ -232,7 +232,7 @@ fn idle_agent(a: Rc<RefCell<GridObject>>, tiles: &Vec<Rc<RefCell<GridObject>>>) 
     if let Some(best_tile) = get_closest(&tiles, l) {
         println!("best tile: {:?}", best_tile);
         go.tile = Some(Rc::clone(&best_tile));
-        go.state = crate::grid::State::MoveToTile;
+        go.state = State::MoveToTile;
     } else {
         println!("no best tile found");
     }
@@ -307,7 +307,7 @@ fn move_to_hole(
         if l == best_hole.borrow().location {
             // arrived!
             agent.has_tile = false;
-            agent.state = crate::grid::State::Idle;
+            agent.state = State::Idle;
             if let Some(t) = &agent.tile.clone() {
                 agent.score += t.borrow().score;
             }
@@ -355,7 +355,7 @@ fn move_to_hole(
 
 pub fn get_closest(
     collection: &Vec<Rc<RefCell<GridObject>>>,
-    loc: crate::grid::Location,
+    loc: Location,
 ) -> Option<Rc<RefCell<GridObject>>> {
     let mut closest: Option<Rc<RefCell<GridObject>>> = None;
     let mut dist = 1000000000;
