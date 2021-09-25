@@ -4,13 +4,22 @@ use super::grid::Direction;
 use super::grid::Grid;
 use super::grid::Location;
 use std::cmp::{Ordering, Reverse};
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::{HashSet};
+use priority_queue::PriorityQueue;
+use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Eq, Hash, Clone)]
+#[derive(Debug, Eq, Clone)]
 struct Node {
     location: Location,
     fscore: u32,
     path : Vec<Direction>,
+}
+
+impl Hash for Node {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.location.hash(state);
+        self.fscore.hash(state);
+    }
 }
 
 impl Ord for Node {
@@ -33,19 +42,19 @@ impl PartialEq for Node {
 
 pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Option<Vec<Direction>> {
     let grid = reference.borrow();
-    let mut open_list : BinaryHeap<Rc<RefCell<Reverse<Node>>>> = BinaryHeap::new();
+    let mut open_list : PriorityQueue<Node, Reverse<u32>> = PriorityQueue::new();
     let mut closed_list: HashSet<Rc<Location>> = HashSet::new();
     let from_node = Node {
         location: from,
         fscore: 0,
         path : Vec::new(),
     };
-    open_list.push(Rc::new(RefCell::new(Reverse(from_node))));
+    open_list.push(from_node, Reverse(0));
     while let Some(current_node) = open_list.pop() {
-        let ref cur_node = *current_node.borrow();
-        let cur_location = cur_node.0.location;
+        let ref cur_node = current_node.0;
+        let cur_location = cur_node.location;
         if cur_location == to {
-            return Some(cur_node.0.path.clone());
+            return Some(cur_node.path.clone());
         }
         closed_list.insert(Rc::new(cur_location));
         'outer: 
@@ -55,8 +64,8 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
                 let next_location = cur_location.next_location(*d);
                 if next_location == to || grid.is_free(&next_location) {
                     let h = next_location.distance(to);
-                    let g = cur_node.0.path.len() as u32 + 1;
-                    let mut new_path = cur_node.0.path.clone();
+                    let g = cur_node.path.len() as u32 + 1;
+                    let mut new_path = cur_node.path.clone();
                     new_path.push(*d);
                     let child = Node {
                         location: next_location,
@@ -65,12 +74,12 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
                     };
                     if !closed_list.contains(&next_location) {
                         for i in open_list.iter() {
-                            let n = &i.borrow().0;
+                            let n = &i.0;
                             if n.location == child.location && n.fscore < child.fscore {
                                 continue 'outer;
                             }
                         }
-                        open_list.push(Rc::new(RefCell::new(Reverse(child))));
+                        open_list.push(child, Reverse(g + h));
                     }
                 }
             }
@@ -113,11 +122,12 @@ mod tests {
         let to = Location { col: 2, row: 2 };
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         let p = path.unwrap();
+        println!("{:?}", p);
         assert_eq!(p.len(), 4);
         assert_eq!(p[0], Direction::Down);
-        assert_eq!(p[1], Direction::Down);
+        assert_eq!(p[1], Direction::Right);
         assert_eq!(p[2], Direction::Right);
-        assert_eq!(p[3], Direction::Right);
+        assert_eq!(p[3], Direction::Down);
     }
 
     #[test]
