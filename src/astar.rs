@@ -4,7 +4,7 @@ use super::grid::Direction;
 use super::grid::Grid;
 use super::grid::Location;
 use std::cmp::{Ordering, Reverse};
-use std::collections::{HashSet};
+use std::collections::HashSet;
 use priority_queue::PriorityQueue;
 use std::hash::{Hash, Hasher};
 

@@ -20,5 +20,4 @@ const DELAY: u64 = 100;
 fn main() {
     let application = Application::new(Some("be.sourcery.tileworld"), Default::default());
     view::start_grid(application);
-
 }
