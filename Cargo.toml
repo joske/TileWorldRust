@@ -11,14 +11,13 @@ path = "src/main.rs"
 [dependencies]
 getrandom = "0.2.2"
 rand = "0.8.3"
-glib = "^0"
-pangocairo = "^0"
+glib = "0.15.2"
 priority-queue = "1.2.0"
-cairo-rs = { version = "^0", features = ["png"] }
+cairo-rs = { version = "0.15.1", features = ["png"] }
 
 [dependencies.gtk]
-version = "0.14.0"
+version = "0.15.2"
 features = ["v3_24"]
 
 [dependencies.gio]
-version = "0.14.6"
+version = "0.15.2"
