@@ -2,7 +2,7 @@
 name = "tile_world_rust"
 version = "0.1.0"
 authors = ["Jos Dehaes <jos.dehaes@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "tile_world_rust"
