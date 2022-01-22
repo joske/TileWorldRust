@@ -1,19 +1,20 @@
 use super::grid::Grid;
 use super::grid::Location;
 use super::grid::Type;
-use crate::grid::WrappedGridObject;
-use crate::GridObject;
+use super::grid::WrappedGridObject;
+use super::GridObject;
+
 use cairo::{Context, FontSlant, FontWeight};
 use glib::clone;
 use gtk::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
-use crate::gio::prelude::ApplicationExt;
-use crate::gio::prelude::ApplicationExtManual;
-use crate::gtk::prelude::GtkWindowExt;
-use crate::gtk::prelude::ContainerExt;
-use crate::gtk::prelude::WidgetExt;
+use gio::prelude::ApplicationExt;
+use gio::prelude::ApplicationExtManual;
+use gtk::prelude::GtkWindowExt;
+use gtk::prelude::ContainerExt;
+use gtk::prelude::WidgetExt;
 use glib::Continue;
 
 use rand::thread_rng;

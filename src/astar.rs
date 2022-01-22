@@ -1,8 +1,9 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use super::grid::Direction;
 use super::grid::Grid;
 use super::grid::Location;
+
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::cmp::{Ordering, Reverse};
 use std::collections::HashSet;
 use priority_queue::PriorityQueue;
