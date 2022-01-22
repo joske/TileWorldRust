@@ -1,8 +1,6 @@
 use super::{COLS, ROWS};
-use rand::{
-    distributions::{Distribution, Standard},
-    Rng,
-};
+use rand::Rng;
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -13,17 +11,6 @@ pub enum Direction {
     Down,
     Left,
     Right,
-}
-
-impl Distribution<Direction> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Direction {
-        match rng.gen_range(1..=4) {
-            1 => Direction::Up,
-            2 => Direction::Down,
-            3 => Direction::Left,
-            _ => Direction::Right,
-        }
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
