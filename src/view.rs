@@ -53,7 +53,7 @@ pub fn start_grid(application: gtk::Application) {
                     None => (),
                     Some(ob) => match ob.borrow().object_type {
                         Type::Agent => {
-                            let (r, g, b) = get_color(ob.borrow().id);
+                            let (r, g, b) = get_color(ob.borrow().id - 1);
                             cr.set_source_rgb(r, g, b);
                             cr.rectangle(x, y, MAG as f64, MAG as f64);
                             cr.new_sub_path();
@@ -87,7 +87,7 @@ pub fn start_grid(application: gtk::Application) {
              for a in agents.iter() {
                  let id = a.borrow().id as f64;
                  let score = a.borrow().score as f64;
-                  let (r, b, g) = get_color(id as u8);
+                  let (r, b, g) = get_color(id as u8 - 1);
                   cr.set_source_rgb(r, g, b);
                   let text = format!("Agent({}): {}", id, score);
                   draw_text(cr, x, y + id * MAG as f64, &String::from(text));
@@ -129,7 +129,8 @@ fn get_color(num: u8) -> (f64, f64, f64) {
         2 => (0., 1., 0.),
         3 => (0.5, 0.5, 0.),
         4 => (0., 0.5, 0.5),
-        _ => (0.5, 0., 0.5),
+        5 => (0.5, 0., 0.5),
+        _ => (0.5, 0.5, 0.5),
     }
 }
 
