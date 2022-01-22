@@ -20,44 +20,37 @@ pub struct Location {
 }
 
 impl Location {
+
+    pub fn new(c: u32, r:u32) -> Location {
+        Location{col: c, row: r}
+    }
+
     pub fn next_location(&self, d: Direction) -> Location {
         match d {
             Direction::Up => {
                 if self.row > 0 {
-                    Location {
-                        col: self.col,
-                        row: self.row - 1,
-                    }
+                    Location::new(self.col, self.row - 1)
                 } else {
                     *self
                 }
             }
             Direction::Down => {
                 if self.row < COLS - 1 {
-                    Location {
-                        col: self.col,
-                        row: self.row + 1,
-                    }
+                    Location::new(self.col, self.row + 1)
                 } else {
                     *self
                 }
             }
             Direction::Left => {
                 if self.col > 0 {
-                    Location {
-                        col: self.col - 1,
-                        row: self.row,
-                    }
+                    Location::new(self.col - 1, self.row)
                 } else {
                     *self
                 }
             }
             Direction::Right => {
                 if self.col < ROWS - 1 {
-                    Location {
-                        col: self.col + 1,
-                        row: self.row,
-                    }
+                    Location::new(self.col + 1, self.row)
                 } else {
                     *self
                 }
@@ -165,11 +158,11 @@ impl Grid {
         let mut c: u32 = rng.gen_range(1..COLS);
         let mut r: u32 = rng.gen_range(1..ROWS);
 
-        let mut l = Location { col: c, row: r };
+        let mut l = Location::new(c, r);
         while !self.is_free(&l) {
             c = rng.gen_range(1..COLS);
             r = rng.gen_range(1..ROWS);
-            l = Location { col: c, row: r };
+            l = Location::new(c, r);
         }
         println!("random location: {:?}", l);
         return l;
@@ -178,7 +171,7 @@ impl Grid {
     pub fn print(&self) {
         for r in 0..ROWS {
             for c in 0..COLS {
-                let l = Location { col: c, row: r };
+                let l = Location::new(c, r);
                 if !self.is_free(&l) {
                     let o = self.objects.get(&l);
                     match o.unwrap().borrow().object_type {

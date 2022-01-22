@@ -97,8 +97,8 @@ mod tests {
     #[test]
     fn test_path() {
         let grid = Grid::new();
-        let from = Location { col: 0, row: 0 };
-        let to = Location { col: 1, row: 1 };
+        let from = Location::new(0, 0);
+        let to = Location::new(1, 1);
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         let p = path.unwrap();
         assert_eq!(p.len(), 2);
@@ -109,8 +109,8 @@ mod tests {
     #[test]
     fn test_path2() {
         let grid = Grid::new();
-        let from = Location { col: 0, row: 0 };
-        let to = Location { col: 0, row: 1 };
+        let from = Location::new(0, 0);
+        let to = Location::new(0, 1);
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         let p = path.unwrap();
         assert_eq!(p.len(), 1);
@@ -120,8 +120,8 @@ mod tests {
     #[test]
     fn test_path3() {
         let grid = Grid::new();
-        let from = Location { col: 0, row: 0 };
-        let to = Location { col: 2, row: 2 };
+        let from = Location::new(0, 0);
+        let to = Location::new(2, 2);
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         let p = path.unwrap();
         println!("{:?}", p);
@@ -135,8 +135,8 @@ mod tests {
     #[test]
     fn test_path_obstacle() {
         let mut grid = Grid::new();
-        let from = Location { col: 0, row: 0 };
-        let to = Location { col: 1, row: 1 };
+        let from = Location::new(0, 0);
+        let to = Location::new(1, 1);
         let obst_location = Location{ col: 1, row: 0};
         let obst = crate::grid::GridObject { 
             id :0,
@@ -159,8 +159,8 @@ mod tests {
     #[test]
     fn test_big_grid() {
         let grid = Grid::new();
-        let from = Location { col: 0, row: 0 };
-        let to = Location { col: 9, row: 9 };
+        let from = Location::new(0, 0);
+        let to = Location::new(9, 9);
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         assert!(path.is_some());
         let p = path.unwrap();
@@ -170,8 +170,8 @@ mod tests {
     #[test]
     fn test_can_not_reach() {
         let grid = Grid::new();
-        let from = Location { col: 0, row: 0 };
-        let to = Location { col: 100, row: 100 }; // these are outside of the grid, no way to find a path
+        let from = Location::new(0, 0);
+        let to = Location::new(100, 100); // these are outside of the grid, no way to find a path
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         assert!(path.is_none());
     }
