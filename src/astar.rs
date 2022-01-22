@@ -16,6 +16,15 @@ struct Node {
     path : Vec<Direction>,
 }
 
+impl Node {
+    fn new(l: Location, f: u32, p: Vec<Direction>) -> Node {
+        Node {
+            location : l,
+            fscore : f,
+            path : p
+        }
+    }
+}
 impl Hash for Node {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.location.hash(state);
@@ -45,11 +54,7 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
     let grid = reference.borrow();
     let mut open_list : PriorityQueue<Node, Reverse<u32>> = PriorityQueue::new();
     let mut closed_list: HashSet<Location> = HashSet::new();
-    let from_node = Node {
-        location: from,
-        fscore: 0,
-        path : Vec::new(),
-    };
+    let from_node = Node::new(from, 0, Vec::new());
     open_list.push(from_node, Reverse(0));
     while let Some(current_node) = open_list.pop() {
         let ref cur_node = current_node.0;
@@ -68,11 +73,7 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
                     let g = cur_node.path.len() as u32 + 1;
                     let mut new_path = cur_node.path.clone();
                     new_path.push(*d);
-                    let child = Node {
-                        location: next_location,
-                        path : new_path,
-                        fscore: g + h,
-                    };
+                    let child = Node::new(next_location, g + h, new_path);
                     if !closed_list.contains(&next_location) {
                         for i in open_list.iter() {
                             let n = &i.0;
