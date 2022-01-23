@@ -9,10 +9,10 @@ name = "tile_world_rust"
 path = "src/main.rs"
 
 [dependencies]
-getrandom = "0.2.2"
-rand = "0.8.3"
+getrandom = "0.2.4"
+rand = "0.8.4"
 glib = "0.15.2"
-priority-queue = "1.2.0"
+priority-queue = "1.2.1"
 cairo-rs = { version = "0.15.1", features = ["png"] }
 
 [dependencies.gtk]
