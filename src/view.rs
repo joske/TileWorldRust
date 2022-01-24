@@ -1,8 +1,7 @@
-use super::grid::Grid;
+use crate::grid::World;
+
 use super::grid::Location;
 use super::grid::Type;
-use super::grid::WrappedGridObject;
-use super::GridObject;
 
 use cairo::{Context, FontSlant, FontWeight};
 use glib::clone;
@@ -17,18 +16,14 @@ use gtk::prelude::ContainerExt;
 use gtk::prelude::WidgetExt;
 use glib::Continue;
 
-use rand::thread_rng;
-use rand::Rng;
 
-use super::{AGENTS, OBJECTS, COLS, MAG, ROWS, DELAY};
+use super::{COLS, MAG, ROWS, DELAY};
 
-pub fn start_grid(application: gtk::Application) {
-    let grid = Grid::new();
-    let workspace = Rc::new(RefCell::new(grid));
-    let (agents, tiles, holes) = create_objects(AGENTS, OBJECTS, OBJECTS, OBJECTS, workspace.clone());
-    let wrapped_agents = Rc::new(RefCell::new(agents));
-    let wrapped_tiles = Rc::new(RefCell::new(tiles));
-    let wrapped_holes = Rc::new(RefCell::new(holes));
+pub fn start_grid(world: World, application: gtk::Application) {
+    let workspace = Rc::new(RefCell::new(world.grid));
+    let wrapped_agents= Rc::new(RefCell::new(world.agents));
+    let wrapped_tiles= Rc::new(RefCell::new(world.tiles));
+    let wrapped_holes= Rc::new(RefCell::new(world.holes));
     application.connect_activate(move |app| {
     let window = ApplicationWindow::new(app);
     window.set_title("TileWorld");
@@ -134,82 +129,3 @@ fn get_color(num: u8) -> (f64, f64, f64) {
     }
 }
 
-fn create_objects(
-    num_agents: u8,
-    num_tiles: u8,
-    num_holes: u8,
-    num_obstacles: u8,
-    wgrid: Rc<RefCell<Grid>>,
-) -> (
-    Vec<WrappedGridObject>,
-    Vec<WrappedGridObject>,
-    Vec<WrappedGridObject>,
-) {
-    let mut grid = wgrid.borrow_mut();
-    let mut agents = Vec::new();
-    let mut tiles = Vec::new();
-    let mut holes = Vec::new();
-    let mut obstacles = Vec::new();
-    for i in 1..=num_agents {
-        let l = grid.random_location();
-        let a = Rc::new(RefCell::new(GridObject {
-            location: l,
-            object_type: crate::grid::Type::Agent,
-            id: i,
-            score: 0,
-            tile: None,
-            hole: None,
-            has_tile: false,
-            state: crate::grid::State::Idle,
-        }));
-        grid.set_object(Rc::clone(&a), &l, &l);
-        agents.push(a);
-    }
-    for i in 1..=num_tiles {
-        let l = grid.random_location();
-        let mut rng = thread_rng();
-        let t = Rc::new(RefCell::new(GridObject {
-            location: l,
-            object_type: crate::grid::Type::Tile,
-            id: i,
-            score: rng.gen_range(1..6),
-            tile: None,
-            hole: None,
-            has_tile: false,
-            state: crate::grid::State::Idle,
-        }));
-        grid.set_object(Rc::clone(&t), &l, &l);
-        tiles.push(t);
-    }
-    for i in 1..=num_holes {
-        let l = grid.random_location();
-        let h = Rc::new(RefCell::new(GridObject {
-            location: l,
-            object_type: crate::grid::Type::Hole,
-            id: i,
-            score: 0,
-            tile: None,
-            hole: None,
-            has_tile: false,
-            state: crate::grid::State::Idle,
-        }));
-        grid.set_object(Rc::clone(&h), &l, &l);
-        holes.push(h);
-    }
-    for i in 1..=num_obstacles {
-        let l = grid.random_location();
-        let o = Rc::new(RefCell::new(GridObject {
-            location: l,
-            object_type: crate::grid::Type::Obstacle,
-            id: i,
-            score: 0,
-            tile: None,
-            hole: None,
-            has_tile: false,
-            state: crate::grid::State::Idle,
-        }));
-        grid.set_object(Rc::clone(&o), &l, &l);
-        obstacles.push(o);
-    }
-    return (agents, tiles, holes);
-}

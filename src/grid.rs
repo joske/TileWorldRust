@@ -1,9 +1,11 @@
-use super::{COLS, ROWS};
-use rand::Rng;
+use super::{COLS, ROWS, AGENTS, OBJECTS};
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::vec::Vec;
 use std::rc::Rc;
+use rand::thread_rng;
+use rand::Rng;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Direction {
@@ -117,14 +119,29 @@ impl PartialEq for GridObject {
 
 pub type WrappedGridObject = Rc<RefCell<GridObject>>;
 
+pub struct World {
+    pub grid: Grid,
+    pub agents: Vec<WrappedGridObject>,
+    pub tiles: Vec<WrappedGridObject>,
+    pub holes: Vec<WrappedGridObject>,
+}
+
+impl World {
+    pub fn new() -> Self {
+        let mut g = Grid::new();
+        let (a, t, h) = g.create_objects(AGENTS, OBJECTS, OBJECTS, OBJECTS);
+        World { grid: g, agents: a, tiles: t, holes: h }
+    }
+}
 pub struct Grid {
     objects: HashMap<Location, WrappedGridObject>,
 }
 
 impl Grid {
     pub fn new() -> Self {
+        let o = HashMap::new();
         Grid {
-            objects: HashMap::new(),
+            objects: o,
         }
     }
 
@@ -188,6 +205,86 @@ impl Grid {
         }
         println!();
     }
+
+    fn create_objects(
+        &mut self,
+        num_agents: u8,
+        num_tiles: u8,
+        num_holes: u8,
+        num_obstacles: u8,
+    ) -> (
+        Vec<WrappedGridObject>,
+        Vec<WrappedGridObject>,
+        Vec<WrappedGridObject>,
+    ) {
+        let mut agents = Vec::new();
+        let mut tiles = Vec::new();
+        let mut holes = Vec::new();
+        let mut obstacles = Vec::new();
+        for i in 1..=num_agents {
+            let l = self.random_location();
+            let a = Rc::new(RefCell::new(GridObject {
+                location: l,
+                object_type: crate::grid::Type::Agent,
+                id: i,
+                score: 0,
+                tile: None,
+                hole: None,
+                has_tile: false,
+                state: crate::grid::State::Idle,
+            }));
+            self.set_object(Rc::clone(&a), &l, &l);
+            agents.push(a);
+        }
+        for i in 1..=num_tiles {
+            let l = self.random_location();
+            let mut rng = thread_rng();
+            let t = Rc::new(RefCell::new(GridObject {
+                location: l,
+                object_type: crate::grid::Type::Tile,
+                id: i,
+                score: rng.gen_range(1..6),
+                tile: None,
+                hole: None,
+                has_tile: false,
+                state: crate::grid::State::Idle,
+            }));
+            self.set_object(Rc::clone(&t), &l, &l);
+            tiles.push(t);
+        }
+        for i in 1..=num_holes {
+            let l = self.random_location();
+            let h = Rc::new(RefCell::new(GridObject {
+                location: l,
+                object_type: crate::grid::Type::Hole,
+                id: i,
+                score: 0,
+                tile: None,
+                hole: None,
+                has_tile: false,
+                state: crate::grid::State::Idle,
+            }));
+            self.set_object(Rc::clone(&h), &l, &l);
+            holes.push(h);
+        }
+        for i in 1..=num_obstacles {
+            let l = self.random_location();
+            let o = Rc::new(RefCell::new(GridObject {
+                location: l,
+                object_type: crate::grid::Type::Obstacle,
+                id: i,
+                score: 0,
+                tile: None,
+                hole: None,
+                has_tile: false,
+                state: crate::grid::State::Idle,
+            }));
+            self.set_object(Rc::clone(&o), &l, &l);
+            obstacles.push(o);
+        }
+        return (agents, tiles, holes);
+    }
+    
 }
 
 pub fn update_agent(

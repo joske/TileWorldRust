@@ -7,7 +7,7 @@ mod astar;
 mod grid;
 mod view;
 
-use crate::grid::GridObject;
+use grid::World;
 use gtk::Application;
 
 pub const COLS: u32 = 40;
@@ -18,6 +18,7 @@ const OBJECTS: u8 = 20;
 const DELAY: u64 = 100;
 
 fn main() {
+    let world = World::new();
     let application = Application::new(Some("be.sourcery.tileworld"), Default::default());
-    view::start_grid(application);
+    view::start_grid(world, application);
 }
