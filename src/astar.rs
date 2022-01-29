@@ -63,7 +63,6 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
             return Some(cur_node.path.clone());
         }
         closed_list.insert(cur_location);
-        'outer: 
         for d in [Direction::Up, Direction::Down, Direction::Left, Direction::Right,].iter()
         {
             if cur_location.is_valid(*d) {
@@ -75,13 +74,11 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
                     new_path.push(*d);
                     let child = Node::new(next_location, g + h, new_path);
                     if !closed_list.contains(&next_location) {
-                        for i in open_list.iter() {
-                            let n = &i.0;
-                            if n.location == child.location && n.fscore < child.fscore {
-                                continue 'outer;
-                            }
+                        let better: Vec<(&Node, &Reverse<u32>)> = open_list.iter().filter(|n| n.0.location == child.location && n.0.fscore < child.fscore).collect();
+                        if better.is_empty() {
+                            // this is now the best way to reach next location
+                            open_list.push(child, Reverse(g + h));
                         }
-                        open_list.push(child, Reverse(g + h));
                     }
                 }
             }
