@@ -139,11 +139,6 @@ mod tests {
             id :0,
             object_type : crate::grid::Type::Obstacle,
             location : obst_location,
-            score : 0,
-            has_tile : false,
-            state : crate::grid::State::Idle,
-            tile : None,
-            hole : None,  
         };
         grid.set_object(Rc::new(RefCell::new(obst)), &obst_location, &obst_location);
         let path = astar(Rc::new(RefCell::new(grid)), from, to);

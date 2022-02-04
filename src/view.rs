@@ -47,23 +47,23 @@ pub fn start_grid(world: World, application: gtk::Application) {
                 match o {
                     None => (),
                     Some(ob) => match ob.borrow().object_type {
-                        Type::Agent => {
+                        Type::Agent(agent) => {
                             let (r, g, b) = get_color(ob.borrow().id - 1);
                             cr.set_source_rgb(r, g, b);
                             cr.rectangle(x, y, MAG as f64, MAG as f64);
                             cr.new_sub_path();
-                            if ob.borrow().has_tile {
+                            if agent.has_tile {
                                 cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
-                                if let Some(t) = &ob.borrow().tile {
-                                    draw_text(cr, x + 6.,  y + 13., &t.borrow().score.to_string());
+                                if let Some(t) = agent.tile {
+                                    draw_text(cr, x + 6.,  y + 13., &t.borrow().tile().borrow().score.to_string());
                                 }
                             }
                             cr.stroke().map_err(|err| println!("{:?}", err)).ok();
                         }
-                        Type::Tile => {
+                        Type::Tile(tile) => {
                             cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
                             cr.stroke().map_err(|err| println!("{:?}", err)).ok();
-                            draw_text(cr, x + 6.,  y + 13., &ob.borrow().score.to_string());
+                            draw_text(cr, x + 6.,  y + 13., &tile.score.to_string());
                         }
                         Type::Hole => {
                             cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
@@ -81,7 +81,7 @@ pub fn start_grid(world: World, application: gtk::Application) {
             let agents = wrapped_agents.borrow();
              for a in agents.iter() {
                  let id = a.borrow().id as f64;
-                 let score = a.borrow().score as f64;
+                 let score = a.borrow().agent().borrow().score as f64;
                   let (r, b, g) = get_color(id as u8 - 1);
                   cr.set_source_rgb(r, g, b);
                   let text = format!("Agent({}): {}", id, score);
