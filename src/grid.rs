@@ -1,11 +1,11 @@
-use super::{COLS, ROWS, AGENTS, OBJECTS};
+use super::{AGENTS, COLS, OBJECTS, ROWS};
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::vec::Vec;
-use std::rc::Rc;
 use rand::thread_rng;
 use rand::Rng;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+use std::vec::Vec;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Direction {
@@ -22,9 +22,8 @@ pub struct Location {
 }
 
 impl Location {
-
-    pub fn new(c: u32, r:u32) -> Location {
-        Location{col: c, row: r}
+    pub fn new(c: u32, r: u32) -> Location {
+        Location { col: c, row: r }
     }
 
     pub fn next_location(&self, d: Direction) -> Location {
@@ -130,7 +129,12 @@ impl World {
     pub fn new() -> Self {
         let mut g = Grid::new();
         let (a, t, h) = g.create_objects(AGENTS, OBJECTS, OBJECTS, OBJECTS);
-        World { grid: g, agents: a, tiles: t, holes: h }
+        World {
+            grid: g,
+            agents: a,
+            tiles: t,
+            holes: h,
+        }
     }
 }
 pub struct Grid {
@@ -140,9 +144,7 @@ pub struct Grid {
 impl Grid {
     pub fn new() -> Self {
         let o = HashMap::new();
-        Grid {
-            objects: o,
-        }
+        Grid { objects: o }
     }
 
     pub fn object(&self, l: &Location) -> Option<Rc<RefCell<GridObject>>> {
@@ -284,7 +286,6 @@ impl Grid {
         }
         return (agents, tiles, holes);
     }
-    
 }
 
 pub fn update_agent(
@@ -348,7 +349,9 @@ fn move_to_tile(
             }
         }
         if let Some(better_tile) = get_closest(&tiles, l) {
-            if better_tile.borrow().location.distance(agent.location) < best_tile.borrow().location.distance(agent.location) {
+            if better_tile.borrow().location.distance(agent.location)
+                < best_tile.borrow().location.distance(agent.location)
+            {
                 best_tile = better_tile;
                 agent.tile = Some(Rc::clone(&best_tile));
             }
@@ -407,7 +410,9 @@ fn move_to_hole(
             }
         }
         if let Some(better_hole) = get_closest(&holes, l) {
-            if better_hole.borrow().location.distance(agent.location) < best_hole.borrow().location.distance(agent.location) {
+            if better_hole.borrow().location.distance(agent.location)
+                < best_hole.borrow().location.distance(agent.location)
+            {
                 best_hole = better_hole;
                 agent.hole = Some(Rc::clone(&best_hole));
             }
