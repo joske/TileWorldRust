@@ -55,7 +55,7 @@ pub fn start_grid(world: World, application: gtk::Application) {
                             if agent.has_tile {
                                 cr.arc(x + MAG as f64 / 2., y + MAG as f64 / 2., MAG as f64 / 2.0, 0.0, 2.0 * PI);
                                 if let Some(t) = agent.tile {
-                                    draw_text(cr, x + 6.,  y + 13., &t.borrow().tile().borrow().score.to_string());
+                                    draw_text(cr, x + 6.,  y + 13., &t.borrow().tile().score.to_string());
                                 }
                             }
                             cr.stroke().map_err(|err| println!("{:?}", err)).ok();
@@ -79,13 +79,13 @@ pub fn start_grid(world: World, application: gtk::Application) {
             let x = COLS as f64 * MAG as f64 + 50 as f64;
             let y = 20 as f64;
             let agents = wrapped_agents.borrow();
-             for a in agents.iter() {
-                 let id = a.borrow().id as f64;
-                 let score = a.borrow().agent().borrow().score as f64;
-                  let (r, b, g) = get_color(id as u8 - 1);
-                  cr.set_source_rgb(r, g, b);
-                  let text = format!("Agent({}): {}", id, score);
-                  draw_text(cr, x, y + id * MAG as f64, &String::from(text));
+            for a in agents.iter() {
+                let id = a.borrow().id as f64;
+                let score = a.borrow().agent().score as f64;
+                let (r, b, g) = get_color(id as u8 - 1);
+                cr.set_source_rgb(r, g, b);
+                let text = format!("Agent({}): {}", id, score);
+                draw_text(cr, x, y + id * MAG as f64, &String::from(text));
             }
         
         }

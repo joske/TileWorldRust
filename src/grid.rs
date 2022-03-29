@@ -122,16 +122,16 @@ pub struct GridObject {
 }
 
 impl GridObject {
-    pub fn agent(self) -> Rc<RefCell<Agent>> {
+    pub fn agent(&mut self) -> &'static mut Agent {
         if let Type::Agent(agent ) = self.object_type {
-            Rc::new(RefCell::new(agent))
+            &mut agent
         } else {
             panic!("not an Agent");
         }
     }
-    pub fn tile(self) -> Rc<RefCell<Tile>> {
+    pub fn tile(self) -> &'static mut Tile {
         if let Type::Tile(tile ) = self.object_type {
-            Rc::new(RefCell::new(tile))
+            &mut tile
         } else {
             panic!("not a Tile");
         }
@@ -312,21 +312,22 @@ pub fn update_agent(
 ) {
     println!("agent {:?}", a.borrow());
     let agent = a.borrow().agent();
-    let state = agent.borrow().state;
+    let state = agent.state;
     match state {
-        State::Idle => idle_agent(Rc::clone(&a), Rc::clone(&agent), &tiles),
-        State::MoveToTile => move_to_tile(g, Rc::clone(&a), Rc::clone(&agent), &tiles, &holes),
-        State::MoveToHole => move_to_hole(g, Rc::clone(&a), Rc::clone(&agent), &holes),
+        State::Idle => idle_agent(Rc::clone(&a), &tiles),
+        State::MoveToTile => move_to_tile(g, Rc::clone(&a), &tiles, &holes),
+        State::MoveToHole => move_to_hole(g, Rc::clone(&a), &holes),
     }
 }
 
-fn idle_agent(a: Rc<RefCell<GridObject>>, agent: Rc<RefCell<Agent>>, tiles: &Vec<Rc<RefCell<GridObject>>>) {
+fn idle_agent(a: Rc<RefCell<GridObject>>, tiles: &Vec<Rc<RefCell<GridObject>>>) {
+    let agent = a.borrow().agent();
     let l = a.borrow().location;
     println!("current location: {:?}", l);
     if let Some(best_tile) = get_closest(&tiles, l) {
         println!("best tile: {:?}", best_tile);
-        agent.borrow().tile = Some(Rc::clone(&best_tile));
-        agent.borrow().state = State::MoveToTile;
+        agent.tile = Some(Rc::clone(&best_tile));
+        agent.state = State::MoveToTile;
     } else {
         println!("no best tile found");
     }
@@ -335,25 +336,25 @@ fn idle_agent(a: Rc<RefCell<GridObject>>, agent: Rc<RefCell<Agent>>, tiles: &Vec
 fn move_to_tile(
     g: Rc<RefCell<Grid>>,
     a: Rc<RefCell<GridObject>>,
-    agent: Rc<RefCell<Agent>>,
     tiles: &Vec<Rc<RefCell<GridObject>>>,
     holes: &Vec<Rc<RefCell<GridObject>>>,
 ) {
-    if let Some(mut best_tile) = agent.borrow().tile.clone() {
+    let mut grid = g.get_mut();
+    let mut agent = a.borrow().agent();
+    if let Some(mut best_tile) = agent.tile.clone() {
         let l = a.borrow().location;
         if l == best_tile.borrow().location {
             // arrived!
-            agent.borrow_mut().has_tile = true;
+            agent.has_tile = true;
             if let Some(best_hole) = get_closest(&holes, l) {
-                agent.borrow_mut().hole = Some(Rc::clone(&best_hole));
-                agent.borrow_mut().state = State::MoveToHole;
+                agent.hole = Some(Rc::clone(&best_hole));
+                agent.state = State::MoveToHole;
             }
-            g.borrow_mut().remove(&l); // remove tile
+            grid.remove(&l); // remove tile
             let new_location = g.borrow().random_location();
-            g.borrow_mut()
-                .set_object(Rc::clone(&best_tile), &l, &new_location); // set the tile in a new location
-            best_tile.borrow_mut().location = new_location;
-            g.borrow_mut().set_object(Rc::clone(&a), &l, &l); // set the agent in the old place
+            grid.set_object(Rc::clone(&best_tile), &l, &new_location); // set the tile in a new location
+            best_tile.get_mut().location = new_location;
+            grid.set_object(Rc::clone(&a), &l, &l); // set the agent in the old place
             agent.state = State::MoveToHole;
             return;
         }
@@ -380,8 +381,8 @@ fn move_to_tile(
                     || next_location == best_tile.borrow().location
                 {
                     println!("allowed, moving");
-                    g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
-                    a.borrow_mut().location = next_location;
+                    grid.set_object(Rc::clone(&a), &l, &next_location);
+                    a.get_mut().location = next_location;
                 } else {
                     println!("can't move!");
                 }
@@ -393,24 +394,24 @@ fn move_to_tile(
 fn move_to_hole(
     g: Rc<RefCell<Grid>>,
     a: Rc<RefCell<GridObject>>,
-    agent: Rc<RefCell<Agent>>,
     holes: &Vec<Rc<RefCell<GridObject>>>,
 ) {
-    if let Some(mut best_hole) = agent.borrow().hole.clone() {
+    let mut grid = g.get_mut();
+    let mut agent = a.borrow().agent();
+    if let Some(mut best_hole) = agent.hole.clone() {
         let l = a.borrow().location;
         if l == best_hole.borrow().location {
             // arrived!
-            agent.borrow().has_tile = false;
-            agent.borrow().state = State::Idle;
-            if let Some(t) = &agent.borrow().tile.clone() {
-                agent.borrow_mut().score += t.borrow().tile().borrow().score;
+            agent.has_tile = false;
+            agent.state = State::Idle;
+            if let Some(t) = agent.tile.clone() {
+                agent.borrow_mut().score += t.borrow().tile().score;
             }
-            g.borrow_mut().remove(&l); // remove hole
+            grid.remove(&l); // remove hole
             let new_location = g.borrow().random_location();
-            g.borrow_mut()
-                .set_object(Rc::clone(&best_hole), &l, &new_location); //create in new location
-            best_hole.borrow_mut().location = new_location;
-            g.borrow_mut().set_object(Rc::clone(&a), &l, &l); // set the agent in the old place
+            grid.set_object(Rc::clone(&best_hole), &l, &new_location); //create in new location
+            best_hole.get_mut().location = new_location;
+            grid.set_object(Rc::clone(&a), &l, &l); // set the agent in the old place
             return;
         }
         if let Some(o) = g.borrow().object(&best_hole.borrow().location) {
@@ -439,7 +440,7 @@ fn move_to_hole(
                     || next_location == best_hole.borrow().location
                 {
                     println!("allowed, moving");
-                    g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
+                    grid.set_object(Rc::clone(&a), &l, &next_location);
                     a.borrow().location = next_location;
                 }
             }
