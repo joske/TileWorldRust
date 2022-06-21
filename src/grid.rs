@@ -1,5 +1,6 @@
 use super::{AGENTS, COLS, OBJECTS, ROWS};
 
+use log::debug;
 use rand::thread_rng;
 use rand::Rng;
 use std::cell::RefCell;
@@ -183,29 +184,29 @@ impl Grid {
             r = rng.gen_range(1..ROWS);
             l = Location::new(c, r);
         }
-        println!("random location: {:?}", l);
+        debug!("random location: {:?}", l);
         return l;
     }
 
     pub fn print(&self) {
         for r in 0..ROWS {
+            let line = &mut ['.'; ROWS as usize];
             for c in 0..COLS {
                 let l = Location::new(c, r);
                 if !self.is_free(&l) {
                     let o = self.objects.get(&l);
                     match o.unwrap().borrow().object_type {
-                        Type::Agent => print!("A"),
-                        Type::Hole => print!("H"),
-                        Type::Tile => print!("{}", o.unwrap().borrow().score.to_string()),
-                        Type::Obstacle => print!("#"),
+                        Type::Agent => line[c as usize] = 'A',
+                        Type::Hole => line[c as usize] = 'H',
+                        Type::Tile => line[c as usize] = format!("{}", o.unwrap().borrow().score.to_string()).chars().nth(0).unwrap(),
+                        Type::Obstacle => line[c as usize] = '#',
                     }
-                } else {
-                    print!(".");
                 }
             }
-            println!();
+            let to_print : String = line.iter().cloned().collect();
+            debug!("{}", to_print);
         }
-        println!();
+        debug!("");
     }
 
     fn create_objects(
@@ -294,7 +295,7 @@ pub fn update_agent(
     tiles: &Vec<Rc<RefCell<GridObject>>>,
     holes: &Vec<Rc<RefCell<GridObject>>>,
 ) {
-    println!("agent {:?}", a.borrow());
+    debug!("agent {:?}", a.borrow());
     let state = a.borrow().state;
     match state {
         State::Idle => idle_agent(Rc::clone(&a), &tiles),
@@ -306,13 +307,13 @@ pub fn update_agent(
 fn idle_agent(a: Rc<RefCell<GridObject>>, tiles: &Vec<Rc<RefCell<GridObject>>>) {
     let mut go = a.borrow_mut();
     let l = go.location;
-    println!("current location: {:?}", l);
+    debug!("current location: {:?}", l);
     if let Some(best_tile) = get_closest(&tiles, l) {
-        println!("best tile: {:?}", best_tile);
+        debug!("best tile: {:?}", best_tile);
         go.tile = Some(Rc::clone(&best_tile));
         go.state = State::MoveToTile;
     } else {
-        println!("no best tile found");
+        debug!("no best tile found");
     }
 }
 
@@ -358,18 +359,18 @@ fn move_to_tile(
         }
         if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_tile.borrow().location) {
             if path.len() != 0 {
-                println!("path: {:?}", path);
+                debug!("path: {:?}", path);
                 let next_direction = path.remove(0);
                 let next_location = l.next_location(next_direction);
-                println!("next location: {:?}", next_location);
+                debug!("next location: {:?}", next_location);
                 if g.borrow().is_free(&next_location)
                     || next_location == best_tile.borrow().location
                 {
-                    println!("allowed, moving");
+                    debug!("allowed, moving");
                     g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
                     agent.location = next_location;
                 } else {
-                    println!("can't move!");
+                    debug!("can't move!");
                 }
             }
         }
@@ -419,14 +420,14 @@ fn move_to_hole(
         }
         if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_hole.borrow().location) {
             if path.len() != 0 {
-                println!("path: {:?}", path);
+                debug!("path: {:?}", path);
                 let next_direction = path.remove(0);
                 let next_location = l.next_location(next_direction);
-                println!("next location: {:?}", next_location);
+                debug!("next location: {:?}", next_location);
                 if g.borrow().is_free(&next_location)
                     || next_location == best_hole.borrow().location
                 {
-                    println!("allowed, moving");
+                    debug!("allowed, moving");
                     g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
                     agent.location = next_location;
                 }

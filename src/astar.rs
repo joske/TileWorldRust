@@ -99,6 +99,7 @@ pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Opti
 #[cfg(test)]
 mod tests {
     use super::*;
+    use log::debug;
 
     #[test]
     fn test_path() {
@@ -130,7 +131,7 @@ mod tests {
         let to = Location::new(2, 2);
         let path = astar(Rc::new(RefCell::new(grid)), from, to);
         let p = path.unwrap();
-        println!("{:?}", p);
+        debug!("{:?}", p);
         assert_eq!(p.len(), 4);
         assert_eq!(p[0], Direction::Down);
         assert_eq!(p[1], Direction::Right);

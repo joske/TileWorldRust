@@ -18,6 +18,7 @@ const OBJECTS: u8 = 20;
 const DELAY: u64 = 100;
 
 fn main() {
+    env_logger::init();
     let world = World::new();
     let application = Application::new(Some("be.sourcery.tileworld"), Default::default());
     view::start_grid(world, application);
