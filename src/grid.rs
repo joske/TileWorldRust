@@ -198,12 +198,17 @@ impl Grid {
                     match o.unwrap().borrow().object_type {
                         Type::Agent => line[c as usize] = 'A',
                         Type::Hole => line[c as usize] = 'H',
-                        Type::Tile => line[c as usize] = format!("{}", o.unwrap().borrow().score.to_string()).chars().nth(0).unwrap(),
+                        Type::Tile => {
+                            line[c as usize] = format!("{}", o.unwrap().borrow().score.to_string())
+                                .chars()
+                                .nth(0)
+                                .unwrap()
+                        }
                         Type::Obstacle => line[c as usize] = '#',
                     }
                 }
             }
-            let to_print : String = line.iter().cloned().collect();
+            let to_print: String = line.iter().cloned().collect();
             debug!("{}", to_print);
         }
         debug!("");

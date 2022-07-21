@@ -50,16 +50,18 @@ impl PartialEq for Node {
     }
 }
 
-pub fn astar(reference: Rc<RefCell<Grid>>, from: Location, to: Location) -> Option<Vec<Direction>> {
-    let grid = reference.borrow();
+pub fn astar(grid: Rc<RefCell<Grid>>, from: Location, to: Location) -> Option<Vec<Direction>> {
+    let grid = grid.borrow();
     let mut open_list: PriorityQueue<Node, Reverse<u32>> = PriorityQueue::new();
     let mut closed_list: HashSet<Location> = HashSet::new();
     let from_node = Node::new(from, 0, Vec::new());
     open_list.push(from_node, Reverse(0));
     while let Some(current_node) = open_list.pop() {
+        // this should be the most promising path to the destination
         let ref cur_node = current_node.0;
         let cur_location = cur_node.location;
         if cur_location == to {
+            // if the cur_location is the destination, we're guaranteed to have found the /best/ path
             return Some(cur_node.path.clone());
         }
         closed_list.insert(cur_location);
