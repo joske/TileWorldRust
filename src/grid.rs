@@ -150,10 +150,7 @@ impl Grid {
 
     pub fn object(&self, l: &Location) -> Option<Rc<RefCell<GridObject>>> {
         let o = self.objects.get(l);
-        match o {
-            Some(go) => Some(Rc::clone(go)),
-            None => None,
-        }
+        o.map(Rc::clone)
     }
 
     pub fn set_object(&mut self, o: Rc<RefCell<GridObject>>, old_loc: &Location, l: &Location) {
@@ -185,7 +182,7 @@ impl Grid {
             l = Location::new(c, r);
         }
         debug!("random location: {:?}", l);
-        return l;
+        l
     }
 
     pub fn print(&self) {
@@ -199,9 +196,13 @@ impl Grid {
                         Type::Agent => line[c as usize] = 'A',
                         Type::Hole => line[c as usize] = 'H',
                         Type::Tile => {
-                            line[c as usize] = format!("{}", o.unwrap().borrow().score.to_string())
+                            line[c as usize] = o
+                                .unwrap()
+                                .borrow()
+                                .score
+                                .to_string()
                                 .chars()
-                                .nth(0)
+                                .next()
                                 .unwrap()
                         }
                         Type::Obstacle => line[c as usize] = '#',
@@ -290,30 +291,30 @@ impl Grid {
             self.set_object(Rc::clone(&o), &l, &l);
             obstacles.push(o);
         }
-        return (agents, tiles, holes);
+        (agents, tiles, holes)
     }
 }
 
 pub fn update_agent(
     g: Rc<RefCell<Grid>>,
     a: Rc<RefCell<GridObject>>,
-    tiles: &Vec<Rc<RefCell<GridObject>>>,
-    holes: &Vec<Rc<RefCell<GridObject>>>,
+    tiles: &[Rc<RefCell<GridObject>>],
+    holes: &[Rc<RefCell<GridObject>>],
 ) {
     debug!("agent {:?}", a.borrow());
     let state = a.borrow().state;
     match state {
-        State::Idle => idle_agent(Rc::clone(&a), &tiles),
-        State::MoveToTile => move_to_tile(g, Rc::clone(&a), &tiles, &holes),
-        State::MoveToHole => move_to_hole(g, Rc::clone(&a), &holes),
+        State::Idle => idle_agent(Rc::clone(&a), tiles),
+        State::MoveToTile => move_to_tile(g, Rc::clone(&a), tiles, holes),
+        State::MoveToHole => move_to_hole(g, Rc::clone(&a), holes),
     }
 }
 
-fn idle_agent(a: Rc<RefCell<GridObject>>, tiles: &Vec<Rc<RefCell<GridObject>>>) {
+fn idle_agent(a: Rc<RefCell<GridObject>>, tiles: &[Rc<RefCell<GridObject>>]) {
     let mut go = a.borrow_mut();
     let l = go.location;
     debug!("current location: {:?}", l);
-    if let Some(best_tile) = get_closest(&tiles, l) {
+    if let Some(best_tile) = get_closest(tiles, l) {
         debug!("best tile: {:?}", best_tile);
         go.tile = Some(Rc::clone(&best_tile));
         go.state = State::MoveToTile;
@@ -325,8 +326,8 @@ fn idle_agent(a: Rc<RefCell<GridObject>>, tiles: &Vec<Rc<RefCell<GridObject>>>) 
 fn move_to_tile(
     g: Rc<RefCell<Grid>>,
     a: Rc<RefCell<GridObject>>,
-    tiles: &Vec<Rc<RefCell<GridObject>>>,
-    holes: &Vec<Rc<RefCell<GridObject>>>,
+    tiles: &[Rc<RefCell<GridObject>>],
+    holes: &[Rc<RefCell<GridObject>>],
 ) {
     let mut agent = a.borrow_mut();
     if let Some(mut best_tile) = agent.tile.clone() {
@@ -334,7 +335,7 @@ fn move_to_tile(
         if l == best_tile.borrow().location {
             // arrived!
             agent.has_tile = true;
-            if let Some(best_hole) = get_closest(&holes, l) {
+            if let Some(best_hole) = get_closest(holes, l) {
                 agent.hole = Some(Rc::clone(&best_hole));
                 agent.state = State::MoveToHole;
             }
@@ -354,7 +355,7 @@ fn move_to_tile(
                 return;
             }
         }
-        if let Some(better_tile) = get_closest(&tiles, l) {
+        if let Some(better_tile) = get_closest(tiles, l) {
             if better_tile.borrow().location.distance(agent.location)
                 < best_tile.borrow().location.distance(agent.location)
             {
@@ -363,7 +364,7 @@ fn move_to_tile(
             }
         }
         if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_tile.borrow().location) {
-            if path.len() != 0 {
+            if !path.is_empty() {
                 debug!("path: {:?}", path);
                 let next_direction = path.remove(0);
                 let next_location = l.next_location(next_direction);
@@ -385,7 +386,7 @@ fn move_to_tile(
 fn move_to_hole(
     g: Rc<RefCell<Grid>>,
     a: Rc<RefCell<GridObject>>,
-    holes: &Vec<Rc<RefCell<GridObject>>>,
+    holes: &[Rc<RefCell<GridObject>>],
 ) {
     let mut agent = a.borrow_mut();
     if let Some(mut best_hole) = agent.hole.clone() {
@@ -408,14 +409,14 @@ fn move_to_hole(
         if let Some(o) = g.borrow().object(&best_hole.borrow().location) {
             if *best_hole.borrow() != *o.borrow() {
                 // our hole is gone, find a new one
-                if let Some(best_hole) = get_closest(&holes, l) {
+                if let Some(best_hole) = get_closest(holes, l) {
                     agent.hole = Some(Rc::clone(&best_hole));
                     agent.state = State::MoveToHole;
                 }
                 return;
             }
         }
-        if let Some(better_hole) = get_closest(&holes, l) {
+        if let Some(better_hole) = get_closest(holes, l) {
             if better_hole.borrow().location.distance(agent.location)
                 < best_hole.borrow().location.distance(agent.location)
             {
@@ -424,7 +425,7 @@ fn move_to_hole(
             }
         }
         if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_hole.borrow().location) {
-            if path.len() != 0 {
+            if !path.is_empty() {
                 debug!("path: {:?}", path);
                 let next_direction = path.remove(0);
                 let next_location = l.next_location(next_direction);
@@ -442,7 +443,7 @@ fn move_to_hole(
 }
 
 pub fn get_closest(
-    collection: &Vec<Rc<RefCell<GridObject>>>,
+    collection: &[Rc<RefCell<GridObject>>],
     loc: Location,
 ) -> Option<Rc<RefCell<GridObject>>> {
     let mut closest: Option<Rc<RefCell<GridObject>>> = None;

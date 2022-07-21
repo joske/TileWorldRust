@@ -58,7 +58,7 @@ pub fn astar(grid: Rc<RefCell<Grid>>, from: Location, to: Location) -> Option<Ve
     open_list.push(from_node, Reverse(0));
     while let Some(current_node) = open_list.pop() {
         // this should be the most promising path to the destination
-        let ref cur_node = current_node.0;
+        let cur_node = &current_node.0;
         let cur_location = cur_node.location;
         if cur_location == to {
             // if the cur_location is the destination, we're guaranteed to have found the /best/ path
@@ -81,21 +81,19 @@ pub fn astar(grid: Rc<RefCell<Grid>>, from: Location, to: Location) -> Option<Ve
                     let mut new_path = cur_node.path.clone();
                     new_path.push(*d);
                     let child = Node::new(next_location, g + h, new_path);
-                    if !closed_list.contains(&next_location) {
-                        let better: Vec<(&Node, &Reverse<u32>)> = open_list
+                    if !closed_list.contains(&next_location)
+                        && !open_list
                             .iter()
-                            .filter(|n| n.0.location == child.location && n.0.fscore < child.fscore)
-                            .collect();
-                        if better.is_empty() {
-                            // this is now the best way to reach next location
-                            open_list.push(child, Reverse(g + h));
-                        }
+                            .any(|n| n.0.location == child.location && n.0.fscore < child.fscore)
+                    {
+                        // this is now the best way to reach next location
+                        open_list.push(child, Reverse(g + h));
                     }
                 }
             }
         }
     }
-    return None;
+    None
 }
 
 #[cfg(test)]

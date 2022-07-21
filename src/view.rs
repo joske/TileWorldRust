@@ -34,7 +34,7 @@ pub fn start_grid(world: World, application: gtk::Application) {
     let area = DrawingArea::new();
     frame.add(&area);
     area.connect_draw(clone!(@weak workspace, @weak wrapped_agents => @default-return Inhibit(false), move |_, cr| {
-        let ref grid = *workspace.borrow();
+        let grid = &(*workspace.borrow());
         use std::f64::consts::PI;
         cr.set_source_rgb(1., 1., 1.);
         cr.paint().map_err(|err| debug!("{:?}", err)).ok();
@@ -77,8 +77,8 @@ pub fn start_grid(world: World, application: gtk::Application) {
                     },
                 }
             }
-            let x = COLS as f64 * MAG as f64 + 50 as f64;
-            let y = 20 as f64;
+            let x = COLS as f64 * MAG as f64 + 50_f64;
+            let y = 20_f64;
             let agents = wrapped_agents.borrow();
              for a in agents.iter() {
                  let id = a.borrow().id as f64;
@@ -86,7 +86,7 @@ pub fn start_grid(world: World, application: gtk::Application) {
                   let (r, b, g) = get_color(id as u8 - 1);
                   cr.set_source_rgb(r, g, b);
                   let text = format!("Agent({}): {}", id, score);
-                  draw_text(cr, x, y + id * MAG as f64, &String::from(text));
+                  draw_text(cr, x, y + id * MAG as f64, &text);
             }
         
         }
@@ -98,7 +98,7 @@ pub fn start_grid(world: World, application: gtk::Application) {
         let tiles = wrapped_tiles.borrow_mut();
         let holes = wrapped_holes.borrow_mut();
         for a in agents.iter_mut() {
-            crate::grid::update_agent(Rc::clone(&workspace), Rc::clone(&a), &tiles, &holes);
+            crate::grid::update_agent(Rc::clone(&workspace), Rc::clone(a), &tiles, &holes);
         }
         workspace.borrow().print();
         glib::Continue(true)
@@ -109,7 +109,7 @@ pub fn start_grid(world: World, application: gtk::Application) {
     application.run();
 }
 
-fn draw_text(cr: &Context, x: f64, y: f64, text: &String) {
+fn draw_text(cr: &Context, x: f64, y: f64, text: &str) {
     cr.select_font_face("Arial", FontSlant::Normal, FontWeight::Normal);
     cr.set_font_size(14.);
 
