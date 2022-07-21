@@ -9,17 +9,17 @@ name = "tile_world_rust"
 path = "src/main.rs"
 
 [dependencies]
-env_logger = "0.9.0"
+env_logger = "0.9"
 log = "0.4"
-getrandom = "0.2.5"
-rand = "0.8.5"
-glib = "0.15.2"
-priority-queue = "1.2.1"
-cairo-rs = { version = "0.15.10", features = ["png"] }
+getrandom = "0.2"
+rand = "0.8"
+glib = "0.15"
+priority-queue = "1.2"
+cairo-rs = { version = "0.15", features = ["png"] }
 
 [dependencies.gtk]
-version = "0.15.4"
+version = "0.15"
 features = ["v3_24"]
 
 [dependencies.gio]
-version = "0.15.10"
+version = "0.15"
