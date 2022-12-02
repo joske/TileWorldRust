@@ -164,10 +164,7 @@ impl Grid {
 
     pub fn is_free(&self, location: &Location) -> bool {
         let o = self.objects.get(location);
-        match o {
-            None => true,
-            Some(_) => false,
-        }
+        o.is_none()
     }
 
     pub fn random_location(&self) -> Location {

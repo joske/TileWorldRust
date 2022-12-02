@@ -13,13 +13,13 @@ env_logger = "0.9"
 log = "0.4"
 getrandom = "0.2"
 rand = "0.8"
-glib = "0.15"
+glib = "0.16"
 priority-queue = "1.2"
-cairo-rs = { version = "0.15", features = ["png"] }
+cairo-rs = { version = "0.16" }
 
 [dependencies.gtk]
-version = "0.15"
+version = "0.16"
 features = ["v3_24"]
 
 [dependencies.gio]
-version = "0.15"
+version = "0.16"
