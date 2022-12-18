@@ -1,3 +1,4 @@
+#![cfg(feature = "gui")]
 use crate::grid::World;
 
 use super::grid::Location;
@@ -80,7 +81,7 @@ pub fn start_grid(world: World, application: gtk::Application) {
             let x = COLS as f64 * MAG as f64 + 50_f64;
             let y = 20_f64;
             let agents = wrapped_agents.borrow();
-             for a in agents.iter() {
+            for a in agents.iter() {
                  let id = a.borrow().id as f64;
                  let score = a.borrow().score as f64;
                   let (r, b, g) = get_color(id as u8 - 1);
@@ -88,7 +89,6 @@ pub fn start_grid(world: World, application: gtk::Application) {
                   let text = format!("Agent({}): {}", id, score);
                   draw_text(cr, x, y + id * MAG as f64, &text);
             }
-        
         }
         Inhibit(false)
     }));
@@ -100,7 +100,6 @@ pub fn start_grid(world: World, application: gtk::Application) {
         for a in agents.iter_mut() {
             crate::grid::update_agent(Rc::clone(&workspace), Rc::clone(a), &tiles, &holes);
         }
-        workspace.borrow().print();
         glib::Continue(true)
     }));
     window.show_all();

@@ -8,18 +8,27 @@ edition = "2021"
 name = "tile_world_rust"
 path = "src/main.rs"
 
+[features]
+default = ["gui"]
+gui = ["dep:glib", "dep:cairo-rs", "dep:gtk", "dep:gio"]
+
 [dependencies]
-env_logger = "0.9"
+env_logger = "0.10.0"
 log = "0.4"
 getrandom = "0.2"
 rand = "0.8"
-glib = "0.16"
 priority-queue = "1.2"
-cairo-rs = { version = "0.16" }
+
+# optional features
+
+glib = {version = "0.16", optional = true}
+cairo-rs = { version = "0.16", optional = true }
 
 [dependencies.gtk]
 version = "0.16"
 features = ["v3_24"]
+optional = true
 
 [dependencies.gio]
 version = "0.16"
+optional = true

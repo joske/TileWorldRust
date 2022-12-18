@@ -182,34 +182,48 @@ impl Grid {
         l
     }
 
-    pub fn print(&self) {
+    #[cfg(not(feature = "gui"))]
+    pub fn print(&self, agents: &[WrappedGridObject]) {
+        println!("\r\x1b[2J\r\x1b[H");
+        println!("TileWorld");
         for r in 0..ROWS {
-            let line = &mut ['.'; ROWS as usize];
             for c in 0..COLS {
                 let l = Location::new(c, r);
                 if !self.is_free(&l) {
                     let o = self.objects.get(&l);
                     match o.unwrap().borrow().object_type {
-                        Type::Agent => line[c as usize] = 'A',
-                        Type::Hole => line[c as usize] = 'H',
-                        Type::Tile => {
-                            line[c as usize] = o
-                                .unwrap()
-                                .borrow()
-                                .score
-                                .to_string()
-                                .chars()
-                                .next()
-                                .unwrap()
+                        Type::Agent => {
+                            let i = o.unwrap().borrow().id;
+                            let has_tile = o.unwrap().borrow().has_tile;
+                            print_agent(i, has_tile);
                         }
-                        Type::Obstacle => line[c as usize] = '#',
+                        Type::Hole => print!("H"),
+                        Type::Tile => {
+                            print!(
+                                "{}",
+                                o.unwrap()
+                                    .borrow()
+                                    .score
+                                    .to_string()
+                                    .chars()
+                                    .next()
+                                    .unwrap()
+                            );
+                        }
+                        Type::Obstacle => print!("#"),
                     }
+                } else {
+                    print!(".");
                 }
             }
-            let to_print: String = line.iter().cloned().collect();
-            debug!("{}", to_print);
+            println!();
         }
-        debug!("");
+        println!();
+        for a in agents.iter() {
+            let id = a.borrow().id;
+            let score = a.borrow().score as f64;
+            println!("\x1b[{}mAgent({}): {}\x1b[0m", 31 + id, id, score);
+        }
     }
 
     fn create_objects(
@@ -453,4 +467,10 @@ pub fn get_closest(
         }
     }
     closest
+}
+
+#[cfg(not(feature = "gui"))]
+fn print_agent(i: u8, has_tile: bool) {
+    let a = if has_tile { "Å" } else { "A" };
+    print!("\x1b[{}m{}\x1b[0m", 31 + i, a);
 }
