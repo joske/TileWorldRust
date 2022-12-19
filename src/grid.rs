@@ -472,5 +472,5 @@ pub fn get_closest(
 #[cfg(not(feature = "gui"))]
 fn print_agent(i: u8, has_tile: bool) {
     let a = if has_tile { "Å" } else { "A" };
-    print!("\x1b[{}m{}\x1b[0m", 31 + i, a);
+    print!("\x1b[{};1m{}\x1b[0m", 31 + i, a);
 }
