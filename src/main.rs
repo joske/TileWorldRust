@@ -32,7 +32,7 @@ fn start_view() {
     use std::{
         cell::RefCell,
         rc::Rc,
-        thread::{self},
+        thread,
         time::Duration,
     };
 
