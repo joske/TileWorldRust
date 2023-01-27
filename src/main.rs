@@ -3,8 +3,6 @@ mod grid;
 mod view;
 
 use grid::World;
-#[cfg(feature = "gui")]
-use gtk::Application;
 
 pub const COLS: u32 = 40;
 pub const ROWS: u32 = 40;
@@ -22,6 +20,8 @@ fn main() {
 
 #[cfg(feature = "gui")]
 fn start_view() {
+    use gtk::Application;
+
     let world = World::new();
     let application = Application::new(Some("be.sourcery.tileworld"), Default::default());
     view::start_grid(world, application);
@@ -29,12 +29,7 @@ fn start_view() {
 
 #[cfg(not(feature = "gui"))]
 fn start_view() {
-    use std::{
-        cell::RefCell,
-        rc::Rc,
-        thread,
-        time::Duration,
-    };
+    use std::{cell::RefCell, rc::Rc, thread, time::Duration};
 
     let world = World::new();
     let grid = Rc::new(RefCell::new(world.grid));
