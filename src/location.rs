@@ -50,7 +50,7 @@ impl Location {
             }
         }
     }
-    pub fn is_valid(&self, d: Direction) -> bool {
+    pub fn is_valid_move(&self, d: Direction) -> bool {
         match d {
             Direction::Up => self.row > 0,
             Direction::Down => self.row < ROWS - 1,
