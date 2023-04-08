@@ -25,10 +25,6 @@ impl Grid {
         self.objects.insert(new, o);
     }
 
-    pub fn remove(&mut self, l: &Location) {
-        self.objects.remove(l);
-    }
-
     pub fn is_free(&self, location: &Location) -> bool {
         !self.objects.contains_key(location)
     }

@@ -128,7 +128,6 @@ impl AgentState {
             self.hole = Some(Rc::clone(&best_hole));
             self.state = State::MoveToHole;
         }
-        g.remove(&agent_location);
         let new_location = g.random_location();
         best_tile.borrow_mut().set_location(new_location);
         g.move_object(best_tile, agent_location, new_location);
@@ -155,7 +154,6 @@ impl AgentState {
                 self.score += tstate.score;
             }
         }
-        g.remove(&agent_location);
         let new_location = g.random_location();
         best_hole.borrow_mut().set_location(new_location);
         g.move_object(best_hole, agent_location, new_location);
