@@ -7,6 +7,7 @@ use rusttype::Font;
 use std::{process::exit, thread::sleep, time::Duration};
 
 mod astar;
+mod draw;
 mod grid;
 mod location;
 mod objects;
@@ -60,7 +61,7 @@ fn main() {
                         }
                     })
                     .collect();
-                g.draw(&copy, glyphs, &ctx, glgraphics);
+                draw::draw(&g, &copy, glyphs, &ctx, glgraphics);
                 sleep(Duration::from_millis(DELAY));
             });
         }
