@@ -1,34 +1,17 @@
 [package]
-name = "tile_world_rust"
+name = "playground"
 version = "0.1.0"
-authors = ["Jos Dehaes <jos.dehaes@gmail.com>"]
 edition = "2021"
 
-[[bin]]
-name = "tile_world_rust"
-path = "src/main.rs"
-
-[features]
-default = ["gui"]
-gui = ["dep:glib", "dep:cairo-rs", "dep:gtk", "dep:gio"]
-
 [dependencies]
-env_logger = "0.10.0"
-log = "0.4"
-getrandom = "0.2"
+env_logger = "0.10"
 rand = "0.8"
+log = "0.4"
+futures = "0.3"
 priority-queue = "1.2"
-
-# optional features
-
-glib = {version = "0.16", optional = true}
-cairo-rs = { version = "0.16", optional = true }
-
-[dependencies.gtk]
-version = "0.16"
-features = ["v3_24"]
-optional = true
-
-[dependencies.gio]
-version = "0.16"
-optional = true
+piston = "0.53.1"
+rusttype = "0.9.2"
+piston2d-graphics = "0.43.0"
+pistoncore-glutin_window = "0.71.0"
+piston2d-opengl_graphics = "0.82.0"
+paste = "1.0"

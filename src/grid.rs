@@ -1,161 +1,34 @@
-use super::{AGENTS, COLS, OBJECTS, ROWS};
+use crate::{
+    location::Location,
+    objects::{AgentInfo, AgentState, HoleState, Object, State, TileState, GO},
+    COLS, MAG, ROWS,
+};
+use graphics::{
+    color::{BLACK, BLUE, GREEN, RED},
+    types::Color,
+    CharacterCache, CircleArc, Context, Ellipse, Graphics, Rectangle, Text,
+};
+use log::{debug, info};
+use rand::{thread_rng, Rng};
+use std::{cell::RefCell, collections::HashMap, f64::consts::PI, rc::Rc};
 
-use log::debug;
-use rand::thread_rng;
-use rand::Rng;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
-use std::vec::Vec;
-
-#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
-pub enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct Location {
-    pub col: u32,
-    pub row: u32,
-}
-
-impl Location {
-    pub fn new(c: u32, r: u32) -> Location {
-        Location { col: c, row: r }
-    }
-
-    pub fn next_location(&self, d: Direction) -> Location {
-        match d {
-            Direction::Up => {
-                if self.row > 0 {
-                    Location::new(self.col, self.row - 1)
-                } else {
-                    *self
-                }
-            }
-            Direction::Down => {
-                if self.row < COLS - 1 {
-                    Location::new(self.col, self.row + 1)
-                } else {
-                    *self
-                }
-            }
-            Direction::Left => {
-                if self.col > 0 {
-                    Location::new(self.col - 1, self.row)
-                } else {
-                    *self
-                }
-            }
-            Direction::Right => {
-                if self.col < ROWS - 1 {
-                    Location::new(self.col + 1, self.row)
-                } else {
-                    *self
-                }
-            }
-        }
-    }
-
-    pub fn is_valid(&self, d: Direction) -> bool {
-        match d {
-            Direction::Up => self.row > 0,
-            Direction::Down => self.row < ROWS - 1,
-            Direction::Left => self.col > 0,
-            Direction::Right => self.col < COLS - 1,
-        }
-    }
-
-    pub fn distance(&self, other: Location) -> u32 {
-        let col_diff = if self.col > other.col {
-            self.col - other.col
-        } else {
-            other.col - self.col
-        };
-        let row_diff = if self.row > other.row {
-            self.row - other.row
-        } else {
-            other.row - self.row
-        };
-        col_diff + row_diff
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum Type {
-    Agent,
-    Tile,
-    Hole,
-    Obstacle,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum State {
-    Idle,
-    MoveToTile,
-    MoveToHole,
-}
-
-#[derive(Debug)]
-pub struct GridObject {
-    pub id: u8,
-    pub object_type: Type,
-    pub location: Location,
-    pub score: u32,
-    pub tile: Option<Rc<RefCell<GridObject>>>,
-    pub hole: Option<Rc<RefCell<GridObject>>>,
-    pub has_tile: bool,
-    pub state: State,
-}
-
-impl PartialEq for GridObject {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id && self.location == other.location
-    }
-}
-
-pub type WrappedGridObject = Rc<RefCell<GridObject>>;
-
-pub struct World {
-    pub grid: Grid,
-    pub agents: Vec<WrappedGridObject>,
-    pub tiles: Vec<WrappedGridObject>,
-    pub holes: Vec<WrappedGridObject>,
-}
-
-impl World {
-    pub fn new() -> Self {
-        let mut g = Grid::new();
-        let (a, t, h) = g.create_objects(AGENTS, OBJECTS, OBJECTS, OBJECTS);
-        World {
-            grid: g,
-            agents: a,
-            tiles: t,
-            holes: h,
-        }
-    }
-}
+#[derive(Default, Debug)]
 pub struct Grid {
-    objects: HashMap<Location, WrappedGridObject>,
+    objects: HashMap<Location, Object>,
 }
 
 impl Grid {
     pub fn new() -> Self {
-        let o = HashMap::new();
-        Grid { objects: o }
+        Grid::default()
     }
 
-    pub fn object(&self, l: &Location) -> Option<Rc<RefCell<GridObject>>> {
-        let o = self.objects.get(l);
-        o.map(Rc::clone)
+    pub fn object(&self, l: &Location) -> Option<&Object> {
+        self.objects.get(l)
     }
 
-    pub fn set_object(&mut self, o: Rc<RefCell<GridObject>>, old_loc: &Location, l: &Location) {
-        self.objects.remove(old_loc);
-        self.objects.insert(*l, Rc::clone(&o));
+    pub fn move_object(&mut self, o: Object, old: Location, new: Location) {
+        self.objects.remove(&old);
+        self.objects.insert(new, o);
     }
 
     pub fn remove(&mut self, l: &Location) {
@@ -163,314 +36,234 @@ impl Grid {
     }
 
     pub fn is_free(&self, location: &Location) -> bool {
-        let o = self.objects.get(location);
-        o.is_none()
+        !self.objects.contains_key(location)
     }
 
     pub fn random_location(&self) -> Location {
         let mut rng = rand::thread_rng();
-        let mut c: u32 = rng.gen_range(1..COLS);
-        let mut r: u32 = rng.gen_range(1..ROWS);
+        let mut c: u16 = rng.gen_range(0..COLS);
+        let mut r: u16 = rng.gen_range(0..ROWS);
 
-        let mut l = Location::new(c, r);
-        while !self.is_free(&l) {
-            c = rng.gen_range(1..COLS);
-            r = rng.gen_range(1..ROWS);
-            l = Location::new(c, r);
+        let mut new_loc = Location::new(c, r);
+        while !self.is_free(&new_loc) {
+            c = rng.gen_range(0..COLS);
+            r = rng.gen_range(0..ROWS);
+            new_loc = Location::new(c, r);
         }
-        debug!("random location: {:?}", l);
-        l
+        debug!("random location: {:?}", new_loc);
+        new_loc
     }
 
-    #[cfg(not(feature = "gui"))]
-    pub fn print(&self, agents: &[WrappedGridObject]) {
-        println!("\r\x1b[2J\r\x1b[H");
-        println!("TileWorld");
+    pub fn update(&mut self, agents: &[Object], tiles: &[Object], holes: &[Object]) {
+        for a in agents.iter() {
+            if let GO::Agent(ref mut agent) = *a.borrow_mut() {
+                agent.update(self, a.clone(), tiles, holes);
+            }
+        }
+    }
+
+    pub fn print(&self) {
         for r in 0..ROWS {
+            let line = &mut ['.'; ROWS as usize];
             for c in 0..COLS {
                 let l = Location::new(c, r);
                 if !self.is_free(&l) {
-                    let o = self.objects.get(&l);
-                    match o.unwrap().borrow().object_type {
-                        Type::Agent => {
-                            let i = o.unwrap().borrow().id;
-                            let has_tile = o.unwrap().borrow().has_tile;
-                            print_agent(i, has_tile);
+                    if let Some(go) = self.object(&l) {
+                        match *go.borrow() {
+                            GO::Agent(ref _a) => line[c as usize] = 'A',
+                            GO::Hole(ref _h) => line[c as usize] = 'H',
+                            GO::Tile(ref t) => {
+                                line[c as usize] = t.score.to_string().chars().next().unwrap()
+                            }
+                            GO::Obstacle(ref _o) => line[c as usize] = '#',
                         }
-                        Type::Hole => print!("H"),
-                        Type::Tile => {
-                            print!(
-                                "{}",
-                                o.unwrap()
-                                    .borrow()
-                                    .score
-                                    .to_string()
-                                    .chars()
-                                    .next()
-                                    .unwrap()
-                            );
-                        }
-                        Type::Obstacle => print!("#"),
                     }
-                } else {
-                    print!(".");
                 }
             }
-            println!();
+            let to_print: String = line.iter().cloned().collect();
+            info!("{}", to_print);
         }
-        println!();
-        for a in agents.iter() {
-            let id = a.borrow().id;
-            let score = a.borrow().score as f64;
-            println!("\x1b[{}mAgent({}): {}\x1b[0m", 31 + id, id, score);
-        }
+        info!("");
     }
 
-    fn create_objects(
+    pub fn create_objects(
         &mut self,
         num_agents: u8,
         num_tiles: u8,
         num_holes: u8,
         num_obstacles: u8,
-    ) -> (
-        Vec<WrappedGridObject>,
-        Vec<WrappedGridObject>,
-        Vec<WrappedGridObject>,
-    ) {
-        let mut agents = Vec::new();
-        let mut tiles = Vec::new();
-        let mut holes = Vec::new();
-        let mut obstacles = Vec::new();
+    ) -> (Vec<Object>, Vec<Object>, Vec<Object>) {
+        let mut agents = vec![];
+        let mut tiles = vec![];
+        let mut holes = vec![];
+        let mut rng = thread_rng();
         for i in 1..=num_agents {
             let l = self.random_location();
-            let a = Rc::new(RefCell::new(GridObject {
+            let agent = AgentState {
                 location: l,
-                object_type: crate::grid::Type::Agent,
                 id: i,
                 score: 0,
-                tile: None,
                 hole: None,
+                tile: None,
                 has_tile: false,
-                state: crate::grid::State::Idle,
-            }));
-            self.set_object(Rc::clone(&a), &l, &l);
-            agents.push(a);
+                state: State::Idle,
+            };
+            let r = Rc::new(RefCell::new(GO::Agent(agent)));
+            info!("created: {:?}", &r);
+            agents.push(r.clone());
+            self.objects.insert(l, r);
         }
-        for i in 1..=num_tiles {
+        for _i in 1..=num_tiles {
             let l = self.random_location();
-            let mut rng = thread_rng();
-            let t = Rc::new(RefCell::new(GridObject {
+            let tile = TileState {
                 location: l,
-                object_type: crate::grid::Type::Tile,
-                id: i,
                 score: rng.gen_range(1..6),
-                tile: None,
-                hole: None,
-                has_tile: false,
-                state: crate::grid::State::Idle,
-            }));
-            self.set_object(Rc::clone(&t), &l, &l);
-            tiles.push(t);
+            };
+            let r = Rc::new(RefCell::new(GO::Tile(tile)));
+            info!("created: {:?}", &r);
+            tiles.push(r.clone());
+            self.objects.insert(l, r);
         }
-        for i in 1..=num_holes {
+        for _i in 1..=num_holes {
             let l = self.random_location();
-            let h = Rc::new(RefCell::new(GridObject {
-                location: l,
-                object_type: crate::grid::Type::Hole,
-                id: i,
-                score: 0,
-                tile: None,
-                hole: None,
-                has_tile: false,
-                state: crate::grid::State::Idle,
-            }));
-            self.set_object(Rc::clone(&h), &l, &l);
-            holes.push(h);
+            let r = Rc::new(RefCell::new(GO::Hole(HoleState { location: l })));
+            info!("created: {:?}", &r);
+            holes.push(r.clone());
+            self.objects.insert(l, r);
         }
-        for i in 1..=num_obstacles {
+        for _i in 1..=num_obstacles {
             let l = self.random_location();
-            let o = Rc::new(RefCell::new(GridObject {
-                location: l,
-                object_type: crate::grid::Type::Obstacle,
-                id: i,
-                score: 0,
-                tile: None,
-                hole: None,
-                has_tile: false,
-                state: crate::grid::State::Idle,
-            }));
-            self.set_object(Rc::clone(&o), &l, &l);
-            obstacles.push(o);
+            let r = Rc::new(RefCell::new(GO::Obstacle(l)));
+            info!("created: {:?}", &r);
+            self.objects.insert(l, r);
         }
         (agents, tiles, holes)
     }
-}
 
-pub fn update_agent(
-    g: Rc<RefCell<Grid>>,
-    a: Rc<RefCell<GridObject>>,
-    tiles: &[Rc<RefCell<GridObject>>],
-    holes: &[Rc<RefCell<GridObject>>],
-) {
-    debug!("agent {:?}", a.borrow());
-    let state = a.borrow().state;
-    match state {
-        State::Idle => idle_agent(Rc::clone(&a), tiles),
-        State::MoveToTile => move_to_tile(g, Rc::clone(&a), tiles, holes),
-        State::MoveToHole => move_to_hole(g, Rc::clone(&a), holes),
-    }
-}
-
-fn idle_agent(a: Rc<RefCell<GridObject>>, tiles: &[Rc<RefCell<GridObject>>]) {
-    let mut go = a.borrow_mut();
-    let l = go.location;
-    debug!("current location: {:?}", l);
-    if let Some(best_tile) = get_closest(tiles, l) {
-        debug!("best tile: {:?}", best_tile);
-        go.tile = Some(Rc::clone(&best_tile));
-        go.state = State::MoveToTile;
-    } else {
-        debug!("no best tile found");
-    }
-}
-
-fn move_to_tile(
-    g: Rc<RefCell<Grid>>,
-    a: Rc<RefCell<GridObject>>,
-    tiles: &[Rc<RefCell<GridObject>>],
-    holes: &[Rc<RefCell<GridObject>>],
-) {
-    let mut agent = a.borrow_mut();
-    if let Some(mut best_tile) = agent.tile.clone() {
-        let l = agent.location;
-        if l == best_tile.borrow().location {
-            // arrived!
-            agent.has_tile = true;
-            if let Some(best_hole) = get_closest(holes, l) {
-                agent.hole = Some(Rc::clone(&best_hole));
-                agent.state = State::MoveToHole;
-            }
-            g.borrow_mut().remove(&l); // remove tile
-            let new_location = g.borrow().random_location();
-            g.borrow_mut()
-                .set_object(Rc::clone(&best_tile), &l, &new_location); // set the tile in a new location
-            best_tile.borrow_mut().location = new_location;
-            g.borrow_mut().set_object(Rc::clone(&a), &l, &l); // set the agent in the old place
-            agent.state = State::MoveToHole;
-            return;
-        }
-        if let Some(o) = g.borrow().object(&best_tile.borrow().location) {
-            if *best_tile.borrow() != *o.borrow() {
-                // our tile is gone
-                agent.state = State::Idle;
-                return;
-            }
-        }
-        if let Some(better_tile) = get_closest(tiles, l) {
-            if better_tile.borrow().location.distance(agent.location)
-                < best_tile.borrow().location.distance(agent.location)
-            {
-                best_tile = better_tile;
-                agent.tile = Some(Rc::clone(&best_tile));
-            }
-        }
-        if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_tile.borrow().location) {
-            if !path.is_empty() {
-                debug!("path: {:?}", path);
-                let next_direction = path.remove(0);
-                let next_location = l.next_location(next_direction);
-                debug!("next location: {:?}", next_location);
-                if g.borrow().is_free(&next_location)
-                    || next_location == best_tile.borrow().location
-                {
-                    debug!("allowed, moving");
-                    g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
-                    agent.location = next_location;
-                } else {
-                    debug!("can't move!");
+    pub fn draw<G: Graphics, C>(
+        &self,
+        agents: &[AgentInfo],
+        glyphs: &mut C,
+        ctx: &Context,
+        g: &mut G,
+    ) where
+        C: CharacterCache<Texture = G::Texture>,
+    {
+        let width = f64::from(u16::saturating_mul(COLS, MAG as u16));
+        let height = f64::from(u16::saturating_mul(ROWS, MAG as u16));
+        Rectangle::new_border(BLACK, 1.0).draw(
+            [0.0, 0.0, width, height],
+            &ctx.draw_state,
+            ctx.transform,
+            g,
+        );
+        for r in 0..ROWS {
+            for c in 0..COLS {
+                let x = f64::from(u16::saturating_mul(c, MAG as u16));
+                let y = f64::from(u16::saturating_mul(r, MAG as u16));
+                let l = Location::new(c, r);
+                if !self.is_free(&l) {
+                    if let Some(go) = self.object(&l) {
+                        match *go.borrow() {
+                            GO::Agent(ref a) => {
+                                let color = Grid::get_color(a.id - 1);
+                                Rectangle::new_border(color, 1.0).draw(
+                                    [x, y, MAG, MAG],
+                                    &ctx.draw_state,
+                                    ctx.transform,
+                                    g,
+                                );
+                                if a.has_tile {
+                                    let score = a.tile.as_ref().unwrap().borrow().score();
+                                    CircleArc::new(color, 1.0, 0.0, 2f64 * PI).draw(
+                                        [x, y, MAG, MAG],
+                                        &ctx.draw_state,
+                                        ctx.transform,
+                                        g,
+                                    );
+                                    Text::new_color(color, 14)
+                                        .draw_pos(
+                                            &score.to_string(),
+                                            [x + MAG / 4f64, y + MAG - 4.0],
+                                            glyphs,
+                                            &ctx.draw_state,
+                                            ctx.transform,
+                                            g,
+                                        )
+                                        .unwrap();
+                                }
+                            }
+                            GO::Hole(_) => {
+                                Ellipse::new(BLACK).draw_from_to(
+                                    [x, y],
+                                    [x + MAG, y + MAG],
+                                    &ctx.draw_state,
+                                    ctx.transform,
+                                    g,
+                                );
+                            }
+                            GO::Tile(ref t) => {
+                                let score = t.score.to_string();
+                                CircleArc::new(BLACK, 1.0, 0.0, 2f64 * PI).draw(
+                                    [x, y, MAG, MAG],
+                                    &ctx.draw_state,
+                                    ctx.transform,
+                                    g,
+                                );
+                                Text::new_color(BLACK, 14)
+                                    .draw_pos(
+                                        score.as_str(),
+                                        [x + MAG / 4f64, y + MAG - 4.0],
+                                        glyphs,
+                                        &ctx.draw_state,
+                                        ctx.transform,
+                                        g,
+                                    )
+                                    .unwrap();
+                            }
+                            GO::Obstacle(_) => {
+                                Rectangle::new(BLACK).draw(
+                                    [x, y, MAG, MAG],
+                                    &ctx.draw_state,
+                                    ctx.transform,
+                                    g,
+                                );
+                            }
+                        }
+                    }
                 }
             }
         }
-    }
-}
+        let x = COLS as f64 * MAG + 50_f64;
+        let y = 50f64;
 
-fn move_to_hole(
-    g: Rc<RefCell<Grid>>,
-    a: Rc<RefCell<GridObject>>,
-    holes: &[Rc<RefCell<GridObject>>],
-) {
-    let mut agent = a.borrow_mut();
-    if let Some(mut best_hole) = agent.hole.clone() {
-        let l = agent.location;
-        if l == best_hole.borrow().location {
-            // arrived!
-            agent.has_tile = false;
-            agent.state = State::Idle;
-            if let Some(t) = &agent.tile.clone() {
-                agent.score += t.borrow().score;
-            }
-            g.borrow_mut().remove(&l); // remove hole
-            let new_location = g.borrow().random_location();
-            g.borrow_mut()
-                .set_object(Rc::clone(&best_hole), &l, &new_location); //create in new location
-            best_hole.borrow_mut().location = new_location;
-            g.borrow_mut().set_object(Rc::clone(&a), &l, &l); // set the agent in the old place
-            return;
-        }
-        if let Some(o) = g.borrow().object(&best_hole.borrow().location) {
-            if *best_hole.borrow() != *o.borrow() {
-                // our hole is gone, find a new one
-                if let Some(best_hole) = get_closest(holes, l) {
-                    agent.hole = Some(Rc::clone(&best_hole));
-                    agent.state = State::MoveToHole;
-                }
-                return;
-            }
-        }
-        if let Some(better_hole) = get_closest(holes, l) {
-            if better_hole.borrow().location.distance(agent.location)
-                < best_hole.borrow().location.distance(agent.location)
-            {
-                best_hole = better_hole;
-                agent.hole = Some(Rc::clone(&best_hole));
-            }
-        }
-        if let Some(mut path) = crate::astar::astar(Rc::clone(&g), l, best_hole.borrow().location) {
-            if !path.is_empty() {
-                debug!("path: {:?}", path);
-                let next_direction = path.remove(0);
-                let next_location = l.next_location(next_direction);
-                debug!("next location: {:?}", next_location);
-                if g.borrow().is_free(&next_location)
-                    || next_location == best_hole.borrow().location
-                {
-                    debug!("allowed, moving");
-                    g.borrow_mut().set_object(Rc::clone(&a), &l, &next_location);
-                    agent.location = next_location;
-                }
-            }
+        for agent in agents {
+            let id = agent.id;
+            let score = agent.score;
+            let color = Grid::get_color(id - 1);
+            let text = format!("Agent({id}): {score}");
+            Text::new_color(color, 12)
+                .draw_pos(
+                    text.as_str(),
+                    [x, y + id as f64 * MAG],
+                    glyphs,
+                    &ctx.draw_state,
+                    ctx.transform,
+                    g,
+                )
+                .unwrap();
         }
     }
-}
 
-pub fn get_closest(
-    collection: &[Rc<RefCell<GridObject>>],
-    loc: Location,
-) -> Option<Rc<RefCell<GridObject>>> {
-    let mut closest: Option<Rc<RefCell<GridObject>>> = None;
-    let mut dist = 1000000000;
-    for tile_ref in collection.iter() {
-        let t = tile_ref.borrow();
-        if t.location.distance(loc) < dist {
-            closest = Some(Rc::clone(tile_ref));
-            dist = t.location.distance(loc);
+    fn get_color(num: u8) -> Color {
+        match num {
+            0 => BLUE,
+            1 => RED,
+            2 => GREEN,
+            3 => [0.5, 0.5, 0., 1.],
+            4 => [0., 0.5, 0.5, 1.],
+            5 => [0.5, 0., 0.5, 1.],
+            _ => [0.5, 0.5, 0.5, 1.],
         }
     }
-    closest
-}
-
-#[cfg(not(feature = "gui"))]
-fn print_agent(i: u8, has_tile: bool) {
-    let a = if has_tile { "Å" } else { "A" };
-    print!("\x1b[{};1m{}\x1b[0m", 31 + i, a);
 }
