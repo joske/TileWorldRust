@@ -44,7 +44,7 @@ impl Grid {
     }
 
     pub fn update(&mut self, agents: &[Object], tiles: &[Object], holes: &[Object]) {
-        for a in agents.iter() {
+        for a in agents {
             if let GO::Agent(ref mut agent) = *a.borrow_mut() {
                 agent.update(self, a.clone(), tiles, holes);
             }
