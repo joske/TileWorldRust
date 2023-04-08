@@ -18,8 +18,6 @@ const MAG: f64 = 20.0;
 const DELAY: u64 = 150;
 
 fn main() {
-    env_logger::init();
-
     #[cfg(target_os = "macos")]
     let opengl = OpenGL::V3_2;
     #[cfg(target_os = "linux")]
@@ -49,7 +47,6 @@ fn main() {
 
                 clear([1.0; 4], glgraphics);
                 g.update(&agents, &tiles, &holes);
-                g.print();
                 let copy: Vec<AgentInfo> = agents
                     .iter()
                     .flat_map(|go| {

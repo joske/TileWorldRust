@@ -3,7 +3,6 @@ use crate::{
     objects::{AgentState, HoleState, Object, State, TileState, GO},
     COLS, ROWS,
 };
-use log::{debug, info};
 use rand::{thread_rng, Rng};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
@@ -45,7 +44,6 @@ impl Grid {
             r = rng.gen_range(0..ROWS);
             new_loc = Location::new(c, r);
         }
-        debug!("random location: {:?}", new_loc);
         new_loc
     }
 
@@ -55,30 +53,6 @@ impl Grid {
                 agent.update(self, a.clone(), tiles, holes);
             }
         }
-    }
-
-    pub fn print(&self) {
-        for r in 0..ROWS {
-            let line = &mut ['.'; ROWS as usize];
-            for c in 0..COLS {
-                let l = Location::new(c, r);
-                if !self.is_free(&l) {
-                    if let Some(go) = self.object(&l) {
-                        match *go.borrow() {
-                            GO::Agent(ref _a) => line[c as usize] = 'A',
-                            GO::Hole(ref _h) => line[c as usize] = 'H',
-                            GO::Tile(ref t) => {
-                                line[c as usize] = t.score.to_string().chars().next().unwrap()
-                            }
-                            GO::Obstacle(ref _o) => line[c as usize] = '#',
-                        }
-                    }
-                }
-            }
-            let to_print: String = line.iter().cloned().collect();
-            info!("{}", to_print);
-        }
-        info!("");
     }
 
     pub fn create_objects(
@@ -104,7 +78,6 @@ impl Grid {
                 state: State::Idle,
             };
             let r = Rc::new(RefCell::new(GO::Agent(agent)));
-            info!("created: {:?}", &r);
             agents.push(r.clone());
             self.objects.insert(l, r);
         }
@@ -115,21 +88,18 @@ impl Grid {
                 score: rng.gen_range(1..6),
             };
             let r = Rc::new(RefCell::new(GO::Tile(tile)));
-            info!("created: {:?}", &r);
             tiles.push(r.clone());
             self.objects.insert(l, r);
         }
         for _i in 1..=num_holes {
             let l = self.random_location();
             let r = Rc::new(RefCell::new(GO::Hole(HoleState { location: l })));
-            info!("created: {:?}", &r);
             holes.push(r.clone());
             self.objects.insert(l, r);
         }
         for _i in 1..=num_obstacles {
             let l = self.random_location();
             let r = Rc::new(RefCell::new(GO::Obstacle(l)));
-            info!("created: {:?}", &r);
             self.objects.insert(l, r);
         }
         (agents, tiles, holes)
