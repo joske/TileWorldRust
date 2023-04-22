@@ -1063,21 +1063,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
-name = "playground"
-version = "0.1.0"
-dependencies = [
- "log",
- "paste",
- "piston",
- "piston2d-graphics",
- "piston2d-opengl_graphics",
- "pistoncore-glutin_window",
- "priority-queue",
- "rand",
- "rusttype",
-]
-
-[[package]]
 name = "png"
 version = "0.17.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1401,6 +1386,21 @@ dependencies = [
  "flate2",
  "jpeg-decoder",
  "weezl",
+]
+
+[[package]]
+name = "tileworld"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "paste",
+ "piston",
+ "piston2d-graphics",
+ "piston2d-opengl_graphics",
+ "pistoncore-glutin_window",
+ "priority-queue",
+ "rand",
+ "rusttype",
 ]
 
 [[package]]
