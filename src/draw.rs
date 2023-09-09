@@ -16,7 +16,7 @@ pub fn draw<G: Graphics, C>(
     agents: &[AgentInfo],
     glyphs: &mut C,
     ctx: &Context,
-    g: &mut G,
+    graphics: &mut G,
 ) where
     C: CharacterCache<Texture = G::Texture>,
 {
@@ -26,15 +26,15 @@ pub fn draw<G: Graphics, C>(
         [0.0, 0.0, width, height],
         &ctx.draw_state,
         ctx.transform,
-        g,
+        graphics,
     );
     for r in 0..ROWS {
         for c in 0..COLS {
             let x = f64::from(u16::saturating_mul(c, MAG as u16));
             let y = f64::from(u16::saturating_mul(r, MAG as u16));
-            let l = Location::new(c, r);
-            if !grid.is_free(&l) {
-                if let Some(go) = grid.object(&l) {
+            let location = Location::new(c, r);
+            if !grid.is_free(location) {
+                if let Some(go) = grid.object(location) {
                     match *go.borrow() {
                         GO::Agent(ref a) => {
                             let color = get_color(a.id - 1);
@@ -42,7 +42,7 @@ pub fn draw<G: Graphics, C>(
                                 [x, y, MAG, MAG],
                                 &ctx.draw_state,
                                 ctx.transform,
-                                g,
+                                graphics,
                             );
                             if a.has_tile {
                                 let score = a.tile.as_ref().unwrap().borrow().score();
@@ -50,7 +50,7 @@ pub fn draw<G: Graphics, C>(
                                     [x, y, MAG, MAG],
                                     &ctx.draw_state,
                                     ctx.transform,
-                                    g,
+                                    graphics,
                                 );
                                 Text::new_color(color, 14)
                                     .draw_pos(
@@ -59,7 +59,7 @@ pub fn draw<G: Graphics, C>(
                                         glyphs,
                                         &ctx.draw_state,
                                         ctx.transform,
-                                        g,
+                                        graphics,
                                     )
                                     .unwrap();
                             }
@@ -70,7 +70,7 @@ pub fn draw<G: Graphics, C>(
                                 [x + MAG, y + MAG],
                                 &ctx.draw_state,
                                 ctx.transform,
-                                g,
+                                graphics,
                             );
                         }
                         GO::Tile(ref t) => {
@@ -79,7 +79,7 @@ pub fn draw<G: Graphics, C>(
                                 [x, y, MAG, MAG],
                                 &ctx.draw_state,
                                 ctx.transform,
-                                g,
+                                graphics,
                             );
                             Text::new_color(BLACK, 14)
                                 .draw_pos(
@@ -88,7 +88,7 @@ pub fn draw<G: Graphics, C>(
                                     glyphs,
                                     &ctx.draw_state,
                                     ctx.transform,
-                                    g,
+                                    graphics,
                                 )
                                 .unwrap();
                         }
@@ -97,7 +97,7 @@ pub fn draw<G: Graphics, C>(
                                 [x, y, MAG, MAG],
                                 &ctx.draw_state,
                                 ctx.transform,
-                                g,
+                                graphics,
                             );
                         }
                     }
@@ -120,7 +120,7 @@ pub fn draw<G: Graphics, C>(
                 glyphs,
                 &ctx.draw_state,
                 ctx.transform,
-                g,
+                graphics,
             )
             .unwrap();
     }

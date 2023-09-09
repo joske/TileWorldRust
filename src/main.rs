@@ -23,10 +23,13 @@ fn main() {
     #[cfg(target_os = "linux")]
     let opengl = OpenGL::V2_1;
 
-    let settings = WindowSettings::new("TileWorld", (COLS as f64 * MAG + 200.0, ROWS as f64 * MAG))
-        .automatic_close(true)
-        .graphics_api(opengl)
-        .vsync(true);
+    let settings = WindowSettings::new(
+        "TileWorld",
+        (f64::from(COLS) * MAG + 200.0, f64::from(ROWS) * MAG),
+    )
+    .automatic_close(true)
+    .graphics_api(opengl)
+    .vsync(true);
     let texture_settings = TextureSettings::new().filter(Filter::Nearest);
     let font_data: &[u8] = include_bytes!("../UbuntuMono-R.ttf");
     let font: Font<'static> = Font::try_from_bytes(font_data).expect("failed to load font");
@@ -49,7 +52,7 @@ fn main() {
                 g.update(&agents, &tiles, &holes);
                 let copy: Vec<AgentInfo> = agents
                     .iter()
-                    .flat_map(|go| {
+                    .filter_map(|go| {
                         if let GO::Agent(ref a) = *go.borrow() {
                             Some(AgentInfo::from(a))
                         } else {

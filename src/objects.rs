@@ -38,7 +38,7 @@ impl From<&AgentState> for AgentInfo {
 fn get_closest(collection: &[Object], loc: Location) -> Option<Object> {
     let mut closest: Option<Object> = None;
     let mut dist = u16::MAX;
-    for tile_ref in collection.iter() {
+    for tile_ref in collection {
         let t = tile_ref.borrow();
         if t.location().distance(loc) < dist {
             closest = Some(Rc::clone(tile_ref));
@@ -76,7 +76,7 @@ macro_rules! move_to {
                         let next_direction = path.remove(0);
                         let next_location = agent_location.next_location(next_direction);
                         debug!("next location: {:?}", next_location);
-                        if g.is_free(&next_location) || next_location == *best.borrow().location()
+                        if g.is_free(next_location) || next_location == *best.borrow().location()
                         {
                             debug!("allowed, moving");
                             self.location = next_location;
@@ -202,7 +202,7 @@ impl GO {
             GO::Agent(ref mut a) => a.location = l,
             GO::Tile(ref mut t) => t.location = l,
             GO::Hole(ref mut h) => h.location = l,
-            _ => {}
+            GO::Obstacle(_) => {}
         }
     }
 

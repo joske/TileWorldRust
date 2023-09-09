@@ -72,7 +72,7 @@ pub(crate) fn astar(grid: &Grid, from: Location, to: Location) -> Option<Vec<Dir
         ] {
             if cur_location.is_valid_move(d) {
                 let next_location = cur_location.next_location(d);
-                if next_location == to || grid.is_free(&next_location) {
+                if next_location == to || grid.is_free(next_location) {
                     let h = next_location.distance(to);
                     let g = cur_node.path.len() as u16 + 1;
                     let mut new_path = cur_node.path.clone();

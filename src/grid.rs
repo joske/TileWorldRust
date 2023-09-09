@@ -16,8 +16,8 @@ impl Grid {
         Grid::default()
     }
 
-    pub fn object(&self, l: &Location) -> Option<&Object> {
-        self.objects.get(l)
+    pub fn object(&self, l: Location) -> Option<&Object> {
+        self.objects.get(&l)
     }
 
     pub fn move_object(&mut self, o: Object, old: Location, new: Location) {
@@ -25,8 +25,8 @@ impl Grid {
         self.objects.insert(new, o);
     }
 
-    pub fn is_free(&self, location: &Location) -> bool {
-        !self.objects.contains_key(location)
+    pub fn is_free(&self, location: Location) -> bool {
+        !self.objects.contains_key(&location)
     }
 
     pub fn random_location(&self) -> Location {
@@ -35,7 +35,7 @@ impl Grid {
         let mut r: u16 = rng.gen_range(0..ROWS);
 
         let mut new_loc = Location::new(c, r);
-        while !self.is_free(&new_loc) {
+        while !self.is_free(new_loc) {
             c = rng.gen_range(0..COLS);
             r = rng.gen_range(0..ROWS);
             new_loc = Location::new(c, r);
