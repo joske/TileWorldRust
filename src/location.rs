@@ -59,16 +59,8 @@ impl Location {
         }
     }
     pub fn distance(self, other: Location) -> u16 {
-        let col_diff = if self.col > other.col {
-            self.col - other.col
-        } else {
-            other.col - self.col
-        };
-        let row_diff = if self.row > other.row {
-            self.row - other.row
-        } else {
-            other.row - self.row
-        };
+        let col_diff = self.col.abs_diff(other.col);
+        let row_diff = self.row.abs_diff(other.row);
         col_diff + row_diff
     }
 }

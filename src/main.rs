@@ -2,7 +2,9 @@ use glutin_window::GlutinWindow;
 use grid::Grid;
 use objects::{AgentInfo, GO};
 use opengl_graphics::{Filter, GlGraphics, GlyphCache, OpenGL, TextureSettings};
-use piston::{CloseEvent, EventSettings, Events, RenderEvent, Window, WindowSettings};
+use piston::{
+    CloseEvent, EventSettings, Events, OpenGLWindow, RenderEvent, Window, WindowSettings,
+};
 use rusttype::Font;
 use std::{process::exit, thread::sleep, time::Duration};
 
@@ -37,6 +39,7 @@ fn main() {
     let mut window: GlutinWindow = settings.build().expect("Could not create window");
     window.should_close();
     let mut events = Events::new(EventSettings::new());
+    gl::load_with(|s| window.get_proc_address(s) as *const _);
     let mut gl = GlGraphics::new(opengl);
     let mut g = Grid::new();
     let (agents, tiles, holes) = g.create_objects(6, 20, 20, 20);

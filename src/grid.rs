@@ -3,7 +3,7 @@ use crate::{
     objects::{AgentState, HoleState, Object, State, TileState, GO},
     COLS, ROWS,
 };
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 #[derive(Default, Debug)]
@@ -30,14 +30,14 @@ impl Grid {
     }
 
     pub fn random_location(&self) -> Location {
-        let mut rng = rand::thread_rng();
-        let mut c: u16 = rng.gen_range(0..COLS);
-        let mut r: u16 = rng.gen_range(0..ROWS);
+        let mut rng = rand::rng();
+        let mut c: u16 = rng.random_range(0..COLS);
+        let mut r: u16 = rng.random_range(0..ROWS);
 
         let mut new_loc = Location::new(c, r);
         while !self.is_free(new_loc) {
-            c = rng.gen_range(0..COLS);
-            r = rng.gen_range(0..ROWS);
+            c = rng.random_range(0..COLS);
+            r = rng.random_range(0..ROWS);
             new_loc = Location::new(c, r);
         }
         new_loc
@@ -61,7 +61,7 @@ impl Grid {
         let mut agents = vec![];
         let mut tiles = vec![];
         let mut holes = vec![];
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         for i in 1..=num_agents {
             let l = self.random_location();
             let agent = AgentState {
@@ -81,7 +81,7 @@ impl Grid {
             let l = self.random_location();
             let tile = TileState {
                 location: l,
-                score: rng.gen_range(1..6),
+                score: rng.random_range(1..6),
             };
             let r = Rc::new(RefCell::new(GO::Tile(tile)));
             tiles.push(r.clone());

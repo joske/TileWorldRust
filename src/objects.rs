@@ -72,10 +72,10 @@ macro_rules! move_to {
                 }
                 if let Some(mut path) = crate::astar::astar(g, agent_location, *best.borrow().location()) {
                     if !path.is_empty() {
-                        debug!("path: {:?}", path);
+                        debug!("path: {path:?}");
                         let next_direction = path.remove(0);
                         let next_location = agent_location.next_location(next_direction);
-                        debug!("next location: {:?}", next_location);
+                        debug!("next location: {next_location:?}");
                         if g.is_free(next_location) || next_location == *best.borrow().location()
                         {
                             debug!("allowed, moving");
@@ -93,7 +93,7 @@ macro_rules! move_to {
 
 impl AgentState {
     pub fn update(&mut self, g: &mut Grid, go: Object, tiles: &[Object], holes: &[Object]) {
-        debug!("agent {:?}", self);
+        debug!("agent {self:?}");
         match self.state {
             State::Idle => self.idle(tiles),
             State::MoveToTile => self.move_to_tile(g, go, tiles, holes),
@@ -103,9 +103,9 @@ impl AgentState {
 
     fn idle(&mut self, tiles: &[Object]) {
         let agent_location = self.location;
-        debug!("current location: {:?}", agent_location);
+        debug!("current location: {agent_location:?}");
         if let Some(best_tile) = get_closest(tiles, agent_location) {
-            debug!("best tile: {:?}", best_tile);
+            debug!("best tile: {best_tile:?}");
             self.tile = Some(Rc::clone(&best_tile));
             self.state = State::MoveToTile;
         } else {
