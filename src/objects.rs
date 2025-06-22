@@ -206,7 +206,6 @@ impl GO {
         }
     }
 
-    #[allow(dead_code)]
     pub fn score(&self) -> u32 {
         match self {
             GO::Agent(ref a) => a.score,
