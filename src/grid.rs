@@ -1,7 +1,7 @@
 use crate::{
-    location::Location,
-    objects::{AgentState, HoleState, Object, State, TileState, GO},
     COLS, ROWS,
+    location::Location,
+    objects::{AgentState, GO, HoleState, Object, State, TileState},
 };
 use rand::Rng;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};

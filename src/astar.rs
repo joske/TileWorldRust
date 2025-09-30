@@ -25,6 +25,7 @@ impl Node {
         }
     }
 }
+
 impl Hash for Node {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.location.hash(state);

@@ -1,13 +1,13 @@
 use crate::{
+    COLS, MAG, ROWS,
     grid::Grid,
     location::Location,
     objects::{AgentInfo, GO},
-    COLS, MAG, ROWS,
 };
 use graphics::{
+    CharacterCache, CircleArc, Context, Ellipse, Graphics, Rectangle, Text,
     color::{BLACK, BLUE, GREEN, RED},
     types::Color,
-    CharacterCache, CircleArc, Context, Ellipse, Graphics, Rectangle, Text,
 };
 use std::f64::consts::PI;
 
