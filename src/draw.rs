@@ -33,57 +33,29 @@ pub fn draw<G: Graphics, C>(
             let x = f64::from(u16::saturating_mul(c, MAG as u16));
             let y = f64::from(u16::saturating_mul(r, MAG as u16));
             let location = Location::new(c, r);
-            if !grid.is_free(location) {
-                if let Some(go) = grid.object(location) {
-                    match *go.borrow() {
-                        GO::Agent(ref a) => {
-                            let color = get_color(a.id - 1);
-                            Rectangle::new_border(color, 1.0).draw(
+            if !grid.is_free(location)
+                && let Some(go) = grid.object(location)
+            {
+                match *go.borrow() {
+                    GO::Agent(ref a) => {
+                        let color = get_color(a.id - 1);
+                        Rectangle::new_border(color, 1.0).draw(
+                            [x, y, MAG, MAG],
+                            &ctx.draw_state,
+                            ctx.transform,
+                            graphics,
+                        );
+                        if a.has_tile {
+                            let score = a.tile.as_ref().unwrap().borrow().score();
+                            CircleArc::new(color, 1.0, 0.0, 2f64 * PI).draw(
                                 [x, y, MAG, MAG],
                                 &ctx.draw_state,
                                 ctx.transform,
                                 graphics,
                             );
-                            if a.has_tile {
-                                let score = a.tile.as_ref().unwrap().borrow().score();
-                                CircleArc::new(color, 1.0, 0.0, 2f64 * PI).draw(
-                                    [x, y, MAG, MAG],
-                                    &ctx.draw_state,
-                                    ctx.transform,
-                                    graphics,
-                                );
-                                Text::new_color(color, 14)
-                                    .draw_pos(
-                                        &score.to_string(),
-                                        [x + MAG / 4f64, y + MAG - 4.0],
-                                        glyphs,
-                                        &ctx.draw_state,
-                                        ctx.transform,
-                                        graphics,
-                                    )
-                                    .unwrap();
-                            }
-                        }
-                        GO::Hole(_) => {
-                            Ellipse::new(BLACK).draw_from_to(
-                                [x, y],
-                                [x + MAG, y + MAG],
-                                &ctx.draw_state,
-                                ctx.transform,
-                                graphics,
-                            );
-                        }
-                        GO::Tile(ref t) => {
-                            let score = t.score.to_string();
-                            CircleArc::new(BLACK, 1.0, 0.0, 2f64 * PI).draw(
-                                [x, y, MAG, MAG],
-                                &ctx.draw_state,
-                                ctx.transform,
-                                graphics,
-                            );
-                            Text::new_color(BLACK, 14)
+                            Text::new_color(color, 14)
                                 .draw_pos(
-                                    score.as_str(),
+                                    &score.to_string(),
                                     [x + MAG / 4f64, y + MAG - 4.0],
                                     glyphs,
                                     &ctx.draw_state,
@@ -92,14 +64,42 @@ pub fn draw<G: Graphics, C>(
                                 )
                                 .unwrap();
                         }
-                        GO::Obstacle(_) => {
-                            Rectangle::new(BLACK).draw(
-                                [x, y, MAG, MAG],
+                    }
+                    GO::Hole(_) => {
+                        Ellipse::new(BLACK).draw_from_to(
+                            [x, y],
+                            [x + MAG, y + MAG],
+                            &ctx.draw_state,
+                            ctx.transform,
+                            graphics,
+                        );
+                    }
+                    GO::Tile(ref t) => {
+                        let score = t.score.to_string();
+                        CircleArc::new(BLACK, 1.0, 0.0, 2f64 * PI).draw(
+                            [x, y, MAG, MAG],
+                            &ctx.draw_state,
+                            ctx.transform,
+                            graphics,
+                        );
+                        Text::new_color(BLACK, 14)
+                            .draw_pos(
+                                score.as_str(),
+                                [x + MAG / 4f64, y + MAG - 4.0],
+                                glyphs,
                                 &ctx.draw_state,
                                 ctx.transform,
                                 graphics,
-                            );
-                        }
+                            )
+                            .unwrap();
+                    }
+                    GO::Obstacle(_) => {
+                        Rectangle::new(BLACK).draw(
+                            [x, y, MAG, MAG],
+                            &ctx.draw_state,
+                            ctx.transform,
+                            graphics,
+                        );
                     }
                 }
             }

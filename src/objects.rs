@@ -149,10 +149,10 @@ impl AgentState {
         best_hole: Object,
     ) {
         self.has_tile = false;
-        if let Some(t) = &self.tile.clone() {
-            if let GO::Tile(ref tstate) = *t.borrow() {
-                self.score += tstate.score;
-            }
+        if let Some(t) = &self.tile.clone()
+            && let GO::Tile(ref tstate) = *t.borrow()
+        {
+            self.score += tstate.score;
         }
         let new_location = g.random_location();
         best_hole.borrow_mut().set_location(new_location);
@@ -190,26 +190,26 @@ pub enum GO {
 impl GO {
     pub fn location(&self) -> &Location {
         match self {
-            GO::Agent(ref a) => &a.location,
-            GO::Tile(ref t) => &t.location,
-            GO::Hole(ref h) => &h.location,
-            GO::Obstacle(ref o) => o,
+            GO::Agent(a) => &a.location,
+            GO::Tile(t) => &t.location,
+            GO::Hole(h) => &h.location,
+            GO::Obstacle(o) => o,
         }
     }
 
     fn set_location(&mut self, l: Location) {
         match self {
-            GO::Agent(ref mut a) => a.location = l,
-            GO::Tile(ref mut t) => t.location = l,
-            GO::Hole(ref mut h) => h.location = l,
+            GO::Agent(a) => a.location = l,
+            GO::Tile(t) => t.location = l,
+            GO::Hole(h) => h.location = l,
             GO::Obstacle(_) => {}
         }
     }
 
     pub fn score(&self) -> u32 {
         match self {
-            GO::Agent(ref a) => a.score,
-            GO::Tile(ref t) => t.score,
+            GO::Agent(a) => a.score,
+            GO::Tile(t) => t.score,
             _ => 0,
         }
     }
