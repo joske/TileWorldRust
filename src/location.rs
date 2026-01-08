@@ -64,3 +64,126 @@ impl Location {
         col_diff + row_diff
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_location_new() {
+        let loc = Location::new(5, 10);
+        assert_eq!(loc.col, 5);
+        assert_eq!(loc.row, 10);
+    }
+
+    #[test]
+    fn test_distance_same_location() {
+        let loc = Location::new(5, 5);
+        assert_eq!(loc.distance(loc), 0);
+    }
+
+    #[test]
+    fn test_distance_horizontal() {
+        let a = Location::new(0, 0);
+        let b = Location::new(5, 0);
+        assert_eq!(a.distance(b), 5);
+        assert_eq!(b.distance(a), 5);
+    }
+
+    #[test]
+    fn test_distance_vertical() {
+        let a = Location::new(0, 0);
+        let b = Location::new(0, 7);
+        assert_eq!(a.distance(b), 7);
+    }
+
+    #[test]
+    fn test_distance_diagonal() {
+        let a = Location::new(0, 0);
+        let b = Location::new(3, 4);
+        assert_eq!(a.distance(b), 7); // Manhattan distance
+    }
+
+    #[test]
+    fn test_next_location_up() {
+        let loc = Location::new(5, 5);
+        let next = loc.next_location(Direction::Up);
+        assert_eq!(next, Location::new(5, 4));
+    }
+
+    #[test]
+    fn test_next_location_down() {
+        let loc = Location::new(5, 5);
+        let next = loc.next_location(Direction::Down);
+        assert_eq!(next, Location::new(5, 6));
+    }
+
+    #[test]
+    fn test_next_location_left() {
+        let loc = Location::new(5, 5);
+        let next = loc.next_location(Direction::Left);
+        assert_eq!(next, Location::new(4, 5));
+    }
+
+    #[test]
+    fn test_next_location_right() {
+        let loc = Location::new(5, 5);
+        let next = loc.next_location(Direction::Right);
+        assert_eq!(next, Location::new(6, 5));
+    }
+
+    #[test]
+    fn test_next_location_boundary_top() {
+        let loc = Location::new(5, 0);
+        let next = loc.next_location(Direction::Up);
+        assert_eq!(next, loc); // Should stay in place
+    }
+
+    #[test]
+    fn test_next_location_boundary_bottom() {
+        let loc = Location::new(5, ROWS - 1);
+        let next = loc.next_location(Direction::Down);
+        assert_eq!(next, loc); // Should stay in place
+    }
+
+    #[test]
+    fn test_next_location_boundary_left() {
+        let loc = Location::new(0, 5);
+        let next = loc.next_location(Direction::Left);
+        assert_eq!(next, loc); // Should stay in place
+    }
+
+    #[test]
+    fn test_next_location_boundary_right() {
+        let loc = Location::new(COLS - 1, 5);
+        let next = loc.next_location(Direction::Right);
+        assert_eq!(next, loc); // Should stay in place
+    }
+
+    #[test]
+    fn test_is_valid_move_center() {
+        let loc = Location::new(5, 5);
+        assert!(loc.is_valid_move(Direction::Up));
+        assert!(loc.is_valid_move(Direction::Down));
+        assert!(loc.is_valid_move(Direction::Left));
+        assert!(loc.is_valid_move(Direction::Right));
+    }
+
+    #[test]
+    fn test_is_valid_move_top_left_corner() {
+        let loc = Location::new(0, 0);
+        assert!(!loc.is_valid_move(Direction::Up));
+        assert!(loc.is_valid_move(Direction::Down));
+        assert!(!loc.is_valid_move(Direction::Left));
+        assert!(loc.is_valid_move(Direction::Right));
+    }
+
+    #[test]
+    fn test_is_valid_move_bottom_right_corner() {
+        let loc = Location::new(COLS - 1, ROWS - 1);
+        assert!(loc.is_valid_move(Direction::Up));
+        assert!(!loc.is_valid_move(Direction::Down));
+        assert!(loc.is_valid_move(Direction::Left));
+        assert!(!loc.is_valid_move(Direction::Right));
+    }
+}

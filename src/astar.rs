@@ -137,29 +137,56 @@ mod tests {
         assert_eq!(p[3], Direction::Down);
     }
 
-    // #[test]
-    // fn test_path_obstacle() {
-    //     let mut grid = Grid::new();
-    //     let from = Location::new(0, 0);
-    //     let to = Location::new(1, 1);
-    //     let obst_location = Location { col: 1, row: 0 };
-    //     let obst = crate::grid::GridObject {
-    //         id: 0,
-    //         object_type: crate::grid::Type::Obstacle,
-    //         location: obst_location,
-    //         score: 0,
-    //         has_tile: false,
-    //         state: crate::grid::State::Idle,
-    //         tile: None,
-    //         hole: None,
-    //     };
-    //     grid.set_object(Rc::new(RefCell::new(obst)), &obst_location, &obst_location);
-    //     let path = astar(Rc::new(RefCell::new(grid)), from, to);
-    //     let p = path.unwrap();
-    //     assert_eq!(p.len(), 2);
-    //     assert_eq!(p[0], Direction::Down);
-    //     assert_eq!(p[1], Direction::Right);
-    // }
+    #[test]
+    fn test_path_around_obstacle() {
+        let mut grid = Grid::new();
+        let from = Location::new(0, 0);
+        let to = Location::new(1, 1);
+        // Place obstacle at (1, 0), blocking the direct right path
+        grid.add_obstacle(Location::new(1, 0));
+        let path = astar(&grid, from, to);
+        let p = path.unwrap();
+        // Must go down first, then right (can't go right then down)
+        assert_eq!(p.len(), 2);
+        assert_eq!(p[0], Direction::Down);
+        assert_eq!(p[1], Direction::Right);
+    }
+
+    #[test]
+    fn test_path_around_multiple_obstacles() {
+        let mut grid = Grid::new();
+        let from = Location::new(0, 0);
+        let to = Location::new(2, 0);
+        // Block the direct path at (1, 0)
+        grid.add_obstacle(Location::new(1, 0));
+        let path = astar(&grid, from, to);
+        let p = path.unwrap();
+        // Must go around: down, right, right, up
+        assert_eq!(p.len(), 4);
+    }
+
+    #[test]
+    fn test_path_blocked_completely() {
+        let mut grid = Grid::new();
+        let from = Location::new(1, 1);
+        let to = Location::new(1, 3);
+        // Surround the target with obstacles
+        grid.add_obstacle(Location::new(0, 3));
+        grid.add_obstacle(Location::new(2, 3));
+        grid.add_obstacle(Location::new(1, 2));
+        grid.add_obstacle(Location::new(1, 4));
+        let path = astar(&grid, from, to);
+        assert!(path.is_none());
+    }
+
+    #[test]
+    fn test_same_location() {
+        let grid = Grid::new();
+        let loc = Location::new(5, 5);
+        let path = astar(&grid, loc, loc);
+        let p = path.unwrap();
+        assert!(p.is_empty());
+    }
 
     #[test]
     fn test_big_grid() {
