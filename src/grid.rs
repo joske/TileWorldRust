@@ -35,18 +35,22 @@ impl Grid {
         self.objects.insert(location, r);
     }
 
-    pub fn random_location(&self) -> Location {
-        let mut rng = rand::rng();
-        let mut c: u16 = rng.random_range(0..COLS);
-        let mut r: u16 = rng.random_range(0..ROWS);
+    /// Returns a random free location on the grid, or None if no free location
+    /// can be found after a reasonable number of attempts.
+    pub fn random_location(&self) -> Option<Location> {
+        let total_cells = (COLS as usize) * (ROWS as usize);
+        let max_attempts = total_cells * 2; // Give up after 2x grid size attempts
 
-        let mut new_loc = Location::new(c, r);
-        while !self.is_free(new_loc) {
-            c = rng.random_range(0..COLS);
-            r = rng.random_range(0..ROWS);
-            new_loc = Location::new(c, r);
+        let mut rng = rand::rng();
+        for _ in 0..max_attempts {
+            let c: u16 = rng.random_range(0..COLS);
+            let r: u16 = rng.random_range(0..ROWS);
+            let loc = Location::new(c, r);
+            if self.is_free(loc) {
+                return Some(loc);
+            }
         }
-        new_loc
+        None
     }
 
     pub fn update(&mut self, agents: &[Object], tiles: &[Object], holes: &[Object]) {
@@ -69,14 +73,14 @@ impl Grid {
         let mut holes = vec![];
         let mut rng = rand::rng();
         for i in 1..=num_agents {
-            let l = self.random_location();
+            let l = self.random_location().expect("Grid full: cannot place agent");
             let agent = AgentState::new(l, i);
             let r = Rc::new(RefCell::new(GO::Agent(agent)));
             agents.push(r.clone());
             self.objects.insert(l, r);
         }
         for _i in 1..=num_tiles {
-            let l = self.random_location();
+            let l = self.random_location().expect("Grid full: cannot place tile");
             let tile = TileState {
                 location: l,
                 score: rng.random_range(1..6),
@@ -86,13 +90,13 @@ impl Grid {
             self.objects.insert(l, r);
         }
         for _i in 1..=num_holes {
-            let l = self.random_location();
+            let l = self.random_location().expect("Grid full: cannot place hole");
             let r = Rc::new(RefCell::new(GO::Hole(HoleState { location: l })));
             holes.push(r.clone());
             self.objects.insert(l, r);
         }
         for _i in 1..=num_obstacles {
-            let l = self.random_location();
+            let l = self.random_location().expect("Grid full: cannot place obstacle");
             let r = Rc::new(RefCell::new(GO::Obstacle(l)));
             self.objects.insert(l, r);
         }
@@ -169,8 +173,21 @@ mod tests {
         }
 
         // random_location should return a free location
-        let loc = grid.random_location();
+        let loc = grid.random_location().expect("Should find a free location");
         assert!(grid.is_free(loc));
+    }
+
+    #[test]
+    fn test_random_location_returns_none_when_full() {
+        let mut grid = Grid::new();
+        // Fill the entire grid with obstacles
+        for r in 0..crate::ROWS {
+            for c in 0..crate::COLS {
+                grid.add_obstacle(Location::new(c, r));
+            }
+        }
+        // Should return None when grid is full
+        assert!(grid.random_location().is_none());
     }
 
     #[test]

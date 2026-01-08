@@ -188,9 +188,11 @@ impl AgentState {
             self.hole = Some(Rc::clone(&best_hole));
             self.state = State::MoveToHole;
         }
-        let new_location = g.random_location();
-        best_tile.borrow_mut().set_location(new_location);
-        g.move_object(best_tile, agent_location, new_location);
+        // Teleport the tile to a new random location (respawn)
+        if let Some(new_location) = g.random_location() {
+            best_tile.borrow_mut().set_location(new_location);
+            g.move_object(best_tile, agent_location, new_location);
+        }
         self.location = agent_location;
         g.move_object(go, agent_location, agent_location);
     }
@@ -213,9 +215,11 @@ impl AgentState {
         {
             self.score += tstate.score;
         }
-        let new_location = g.random_location();
-        best_hole.borrow_mut().set_location(new_location);
-        g.move_object(best_hole, agent_location, new_location);
+        // Teleport the hole to a new random location (respawn)
+        if let Some(new_location) = g.random_location() {
+            best_hole.borrow_mut().set_location(new_location);
+            g.move_object(best_hole, agent_location, new_location);
+        }
         self.location = agent_location;
         g.move_object(go, agent_location, agent_location);
         self.clear_path_cache(); // New target, clear cached path
