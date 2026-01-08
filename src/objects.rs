@@ -1,4 +1,4 @@
-use crate::{grid::Grid, location::Location};
+use crate::{grid::Grid, location::{Direction, Location}};
 use log::debug;
 use paste::paste;
 use std::{cell::RefCell, rc::Rc};
@@ -19,6 +19,10 @@ pub struct AgentState {
     pub hole: Option<Object>,
     pub has_tile: bool,
     pub state: State,
+    // Cached path to current target (avoids recalculating A* every frame)
+    cached_path: Vec<Direction>,
+    // Location of target when path was calculated (to detect if target moved)
+    cached_target_loc: Option<Location>,
 }
 
 pub struct AgentInfo {
@@ -52,46 +56,100 @@ fn get_closest(collection: &[Object], loc: Location) -> Option<Object> {
 macro_rules! move_to {
     ($dest:ident, $arrived:ident) => {
         paste!{
-            /// move towards the destination
-            /// always get the closest $dest again
-            /// check if this we are at the destination already
-            /// otherwise calculate a path to the destination and move
+            /// Move towards the destination using cached path when possible.
+            /// Only recalculates path when:
+            /// - No cached path exists
+            /// - Target has moved (was collected by another agent)
+            /// - Path is blocked
             fn [<move_to_ $dest>](&mut self, g: &mut Grid, go: Object, tiles: &[Object], holes: &[Object]) {
-                let mut list = tiles;
-                if stringify!($dest) == "hole" {
-                    list = holes;
-                }
+                let list = if stringify!($dest) == "hole" { holes } else { tiles };
                 let agent_location = self.location;
-                let best = get_closest(list, agent_location).unwrap(); // guaranteed to
-                // be a best $dest
-                self.$dest = Some(best.clone());
-                if agent_location == *best.borrow().location() {
-                    // arrived!
-                    self. $arrived(g, go, tiles, holes, agent_location, best);
+
+                // Get or update target
+                let target = if let Some(ref cached) = self.$dest {
+                    // Check if cached target is still the closest (it might have moved)
+                    let cached_loc = *cached.borrow().location();
+                    if Some(cached_loc) != self.cached_target_loc {
+                        // Target moved, need to find new closest and recalculate path
+                        self.cached_path.clear();
+                        self.cached_target_loc = None;
+                    }
+                    Rc::clone(cached)
+                } else {
+                    // No cached target, find closest
+                    let best = get_closest(list, agent_location).unwrap();
+                    self.$dest = Some(best.clone());
+                    self.cached_path.clear();
+                    best
+                };
+
+                let target_loc = *target.borrow().location();
+
+                // Check if we've arrived
+                if agent_location == target_loc {
+                    self.cached_path.clear();
+                    self.cached_target_loc = None;
+                    self.$arrived(g, go, tiles, holes, agent_location, target);
                     return;
                 }
-                if let Some(mut path) = crate::astar::astar(g, agent_location, *best.borrow().location()) {
-                    if !path.is_empty() {
-                        debug!("path: {path:?}");
-                        let next_direction = path.remove(0);
-                        let next_location = agent_location.next_location(next_direction);
-                        debug!("next location: {next_location:?}");
-                        if g.is_free(next_location) || next_location == *best.borrow().location()
-                        {
-                            debug!("allowed, moving");
-                            self.location = next_location;
-                            g.move_object(go, agent_location, next_location);
-                        } else {
-                            debug!("can't move!");
-                        }
+
+                // Use cached path or calculate new one
+                if self.cached_path.is_empty() || self.cached_target_loc != Some(target_loc) {
+                    if let Some(path) = crate::astar::astar(g, agent_location, target_loc) {
+                        self.cached_path = path;
+                        self.cached_target_loc = Some(target_loc);
+                    } else {
+                        // No path found, clear cache and try again next frame
+                        self.cached_path.clear();
+                        self.cached_target_loc = None;
+                        return;
                     }
-                };
+                }
+
+                // Follow the cached path
+                if !self.cached_path.is_empty() {
+                    let next_direction = self.cached_path[0];
+                    let next_location = agent_location.next_location(next_direction);
+                    debug!("next location: {next_location:?}");
+
+                    if g.is_free(next_location) || next_location == target_loc {
+                        debug!("allowed, moving");
+                        self.cached_path.remove(0);
+                        self.location = next_location;
+                        g.move_object(go, agent_location, next_location);
+                    } else {
+                        // Path is blocked, recalculate next frame
+                        debug!("blocked, will recalculate");
+                        self.cached_path.clear();
+                        self.cached_target_loc = None;
+                    }
+                }
             }
         }
     }
 }
 
 impl AgentState {
+    pub fn new(location: Location, id: u8) -> Self {
+        AgentState {
+            location,
+            id,
+            score: 0,
+            hole: None,
+            tile: None,
+            has_tile: false,
+            state: State::Idle,
+            cached_path: Vec::new(),
+            cached_target_loc: None,
+        }
+    }
+
+    /// Clear cached path when changing targets
+    fn clear_path_cache(&mut self) {
+        self.cached_path.clear();
+        self.cached_target_loc = None;
+    }
+
     pub fn update(&mut self, g: &mut Grid, go: Object, tiles: &[Object], holes: &[Object]) {
         debug!("agent {self:?}");
         match self.state {
@@ -107,6 +165,7 @@ impl AgentState {
         if let Some(best_tile) = get_closest(tiles, agent_location) {
             debug!("best tile: {best_tile:?}");
             self.tile = Some(Rc::clone(&best_tile));
+            self.clear_path_cache(); // New target, clear cached path
             self.state = State::MoveToTile;
         } else {
             debug!("no best tile found");
@@ -124,6 +183,7 @@ impl AgentState {
         best_tile: Object,
     ) {
         self.has_tile = true;
+        self.clear_path_cache(); // New target, clear cached path
         if let Some(best_hole) = get_closest(holes, agent_location) {
             self.hole = Some(Rc::clone(&best_hole));
             self.state = State::MoveToHole;
@@ -158,6 +218,7 @@ impl AgentState {
         g.move_object(best_hole, agent_location, new_location);
         self.location = agent_location;
         g.move_object(go, agent_location, agent_location);
+        self.clear_path_cache(); // New target, clear cached path
         if let Some(best_tile) = get_closest(tiles, agent_location) {
             self.tile = Some(Rc::clone(&best_tile));
             self.state = State::MoveToTile;

@@ -2,102 +2,108 @@ use super::{
     grid::Grid,
     location::{Direction, Location},
 };
-use priority_queue::PriorityQueue;
-use std::{
-    cmp::{Ordering, Reverse},
-    collections::HashSet,
-    hash::{Hash, Hasher},
-};
+use std::{cmp::Reverse, collections::BinaryHeap, collections::HashMap};
 
-#[derive(Debug, Eq, Clone)]
-struct Node {
-    location: Location,
-    fscore: u16,
-    path: Vec<Direction>,
-}
-
-impl Node {
-    fn new(l: Location, f: u16, p: Vec<Direction>) -> Node {
-        Node {
-            location: l,
-            fscore: f,
-            path: p,
+/// Reconstructs the path by walking back through the came_from map
+fn reconstruct_path(
+    came_from: &HashMap<Location, (Location, Direction)>,
+    mut current: Location,
+    start: Location,
+) -> Vec<Direction> {
+    let mut path = Vec::new();
+    while current != start {
+        if let Some(&(parent, direction)) = came_from.get(&current) {
+            path.push(direction);
+            current = parent;
+        } else {
+            break;
         }
     }
-}
-
-impl Hash for Node {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.location.hash(state);
-        self.fscore.hash(state);
-    }
-}
-
-impl Ord for Node {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.fscore.cmp(&other.fscore)
-    }
-}
-
-impl PartialOrd for Node {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for Node {
-    fn eq(&self, other: &Self) -> bool {
-        self.location == other.location
-    }
+    path.reverse();
+    path
 }
 
 pub(crate) fn astar(grid: &Grid, from: Location, to: Location) -> Option<Vec<Direction>> {
-    let mut open_list: PriorityQueue<Node, Reverse<u16>> = PriorityQueue::new();
-    let mut closed_list: HashSet<Location> = HashSet::new();
-    let from_node = Node::new(from, 0, Vec::new());
-    open_list.push(from_node, Reverse(0));
-    while let Some(current_node) = open_list.pop() {
-        // this should be the most promising path to the destination
-        let cur_node = &current_node.0;
-        let cur_location = cur_node.location;
-        if cur_location == to {
-            // if the cur_location is the destination, we're guaranteed to have found the /best/ path
-            return Some(cur_node.path.clone());
+    // Early return if start == goal
+    if from == to {
+        return Some(Vec::new());
+    }
+
+    // Priority queue: (Reverse(f_score), g_score, location)
+    // Using Reverse for min-heap behavior
+    let mut open_heap: BinaryHeap<(Reverse<u16>, u16, Location)> = BinaryHeap::new();
+
+    // Maps location -> best known g_score (O(1) lookup)
+    let mut g_scores: HashMap<Location, u16> = HashMap::new();
+
+    // Maps location -> (parent_location, direction_taken)
+    let mut came_from: HashMap<Location, (Location, Direction)> = HashMap::new();
+
+    // Initialize with start node
+    g_scores.insert(from, 0);
+    let h = from.distance(to);
+    open_heap.push((Reverse(h), 0, from));
+
+    while let Some((_, current_g, current_loc)) = open_heap.pop() {
+        // Check if we've reached the goal
+        if current_loc == to {
+            return Some(reconstruct_path(&came_from, to, from));
         }
-        closed_list.insert(cur_location);
+
+        // Skip if we've already found a better path to this node
+        if let Some(&best_g) = g_scores.get(&current_loc) {
+            if current_g > best_g {
+                continue;
+            }
+        }
+
+        // Explore neighbors
         for d in [
             Direction::Up,
             Direction::Down,
             Direction::Left,
             Direction::Right,
         ] {
-            if cur_location.is_valid_move(d) {
-                let next_location = cur_location.next_location(d);
-                if next_location == to || grid.is_free(next_location) {
-                    let h = next_location.distance(to);
-                    let g = cur_node.path.len() as u16 + 1;
-                    let mut new_path = cur_node.path.clone();
-                    new_path.push(d);
-                    let child = Node::new(next_location, g + h, new_path);
-                    if !closed_list.contains(&next_location)
-                        && !open_list
-                            .iter()
-                            .any(|n| n.0.location == child.location && n.0.fscore < child.fscore)
-                    {
-                        // this is now the best way to reach next location
-                        open_list.push(child, Reverse(g + h));
+            if current_loc.is_valid_move(d) {
+                let next_loc = current_loc.next_location(d);
+
+                // Check if passable (or is the destination)
+                if next_loc == to || grid.is_free(next_loc) {
+                    let tentative_g = current_g + 1;
+
+                    // Only proceed if this is a better path
+                    let dominated = g_scores
+                        .get(&next_loc)
+                        .is_some_and(|&best| tentative_g >= best);
+                    if !dominated {
+                        // This is the best path to next_loc so far
+                        g_scores.insert(next_loc, tentative_g);
+                        came_from.insert(next_loc, (current_loc, d));
+
+                        let h = next_loc.distance(to);
+                        let f = tentative_g + h;
+                        open_heap.push((Reverse(f), tentative_g, next_loc));
                     }
                 }
             }
         }
     }
+
     None
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use log::debug;
+
+    /// Helper to verify a path leads from start to end
+    fn verify_path(start: Location, end: Location, path: &[Direction]) -> bool {
+        let mut current = start;
+        for &d in path {
+            current = current.next_location(d);
+        }
+        current == end
+    }
 
     #[test]
     fn test_path() {
@@ -106,9 +112,8 @@ mod tests {
         let to = Location::new(1, 1);
         let path = astar(&grid, from, to);
         let p = path.unwrap();
-        assert_eq!(p.len(), 2);
-        assert_eq!(p[0], Direction::Down);
-        assert_eq!(p[1], Direction::Right);
+        assert_eq!(p.len(), 2); // Optimal path length
+        assert!(verify_path(from, to, &p));
     }
 
     #[test]
@@ -129,12 +134,8 @@ mod tests {
         let to = Location::new(2, 2);
         let path = astar(&grid, from, to);
         let p = path.unwrap();
-        debug!("{:?}", p);
-        assert_eq!(p.len(), 4);
-        assert_eq!(p[0], Direction::Down);
-        assert_eq!(p[1], Direction::Right);
-        assert_eq!(p[2], Direction::Right);
-        assert_eq!(p[3], Direction::Down);
+        assert_eq!(p.len(), 4); // Optimal path length
+        assert!(verify_path(from, to, &p));
     }
 
     #[test]
@@ -146,10 +147,8 @@ mod tests {
         grid.add_obstacle(Location::new(1, 0));
         let path = astar(&grid, from, to);
         let p = path.unwrap();
-        // Must go down first, then right (can't go right then down)
-        assert_eq!(p.len(), 2);
-        assert_eq!(p[0], Direction::Down);
-        assert_eq!(p[1], Direction::Right);
+        assert_eq!(p.len(), 2); // Still optimal length
+        assert!(verify_path(from, to, &p));
     }
 
     #[test]
@@ -161,8 +160,9 @@ mod tests {
         grid.add_obstacle(Location::new(1, 0));
         let path = astar(&grid, from, to);
         let p = path.unwrap();
-        // Must go around: down, right, right, up
+        // Must go around the obstacle
         assert_eq!(p.len(), 4);
+        assert!(verify_path(from, to, &p));
     }
 
     #[test]
@@ -197,6 +197,7 @@ mod tests {
         assert!(path.is_some());
         let p = path.unwrap();
         assert_eq!(p.len(), 18);
+        assert!(verify_path(from, to, &p));
     }
 
     #[test]

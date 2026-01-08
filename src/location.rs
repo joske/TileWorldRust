@@ -8,7 +8,7 @@ pub enum Direction {
     Right,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Location {
     pub col: u16,
     pub row: u16,

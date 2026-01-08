@@ -1,7 +1,7 @@
 use crate::{
     COLS, ROWS,
     location::Location,
-    objects::{AgentState, GO, HoleState, Object, State, TileState},
+    objects::{AgentState, GO, HoleState, Object, TileState},
 };
 use rand::Rng;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
@@ -70,15 +70,7 @@ impl Grid {
         let mut rng = rand::rng();
         for i in 1..=num_agents {
             let l = self.random_location();
-            let agent = AgentState {
-                location: l,
-                id: i,
-                score: 0,
-                hole: None,
-                tile: None,
-                has_tile: false,
-                state: State::Idle,
-            };
+            let agent = AgentState::new(l, i);
             let r = Rc::new(RefCell::new(GO::Agent(agent)));
             agents.push(r.clone());
             self.objects.insert(l, r);
@@ -111,6 +103,7 @@ impl Grid {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::objects::State;
 
     #[test]
     fn test_grid_new_is_empty() {
