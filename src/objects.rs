@@ -133,7 +133,6 @@ impl AgentState {
         g.move_object(best_tile, agent_location, new_location);
         self.location = agent_location;
         g.move_object(go, agent_location, agent_location);
-        self.state = State::MoveToHole;
     }
 
     move_to!(tile, pick_tile);

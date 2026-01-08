@@ -28,7 +28,7 @@ impl Location {
                 }
             }
             Direction::Down => {
-                if self.row < COLS - 1 {
+                if self.row < ROWS - 1 {
                     Location::new(self.col, self.row + 1)
                 } else {
                     self
@@ -42,7 +42,7 @@ impl Location {
                 }
             }
             Direction::Right => {
-                if self.col < ROWS - 1 {
+                if self.col < COLS - 1 {
                     Location::new(self.col + 1, self.row)
                 } else {
                     self

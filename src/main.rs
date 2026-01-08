@@ -3,7 +3,7 @@ use grid::Grid;
 use objects::{AgentInfo, GO};
 use opengl_graphics::{Filter, GlGraphics, GlyphCache, OpenGL, TextureSettings};
 use piston::{
-    CloseEvent, EventSettings, Events, OpenGLWindow, RenderEvent, Window, WindowSettings,
+    CloseEvent, EventSettings, Events, OpenGLWindow, RenderEvent, WindowSettings,
 };
 use rusttype::Font;
 use std::{process::exit, thread::sleep, time::Duration};
@@ -37,7 +37,6 @@ fn main() {
     let font: Font<'static> = Font::try_from_bytes(font_data).expect("failed to load font");
     let glyphs = &mut GlyphCache::from_font(font, (), texture_settings);
     let mut window: GlutinWindow = settings.build().expect("Could not create window");
-    window.should_close();
     let mut events = Events::new(EventSettings::new());
     gl::load_with(|s| window.get_proc_address(s) as *const _);
     let mut gl = GlGraphics::new(opengl);

@@ -45,8 +45,10 @@ pub fn draw<G: Graphics, C>(
                             ctx.transform,
                             graphics,
                         );
-                        if a.has_tile {
-                            let score = a.tile.as_ref().unwrap().borrow().score();
+                        if a.has_tile
+                            && let Some(ref tile) = a.tile
+                        {
+                            let score = tile.borrow().score();
                             CircleArc::new(color, 1.0, 0.0, 2f64 * PI).draw(
                                 [x, y, MAG, MAG],
                                 &ctx.draw_state,
